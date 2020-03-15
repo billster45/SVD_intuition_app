@@ -114,7 +114,7 @@ TAB1_SERVER <- function(input, output, session) {
                                target="_blank"),"." ))
           ),
           
-          tags$h2("Why, When all singular vectors are selected, the non-compressed image is not identical to the original?"), 
+          tags$h2("Why, when all singular vectors are selected, is the non-compressed image not identical to the original?"), 
           
           tags$ul(
             
