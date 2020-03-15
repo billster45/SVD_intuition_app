@@ -1,15 +1,13 @@
-#https://stats.stackexchange.com/questions/69157/why-do-we-need-to-normalize-data-before-principal-component-analysis-pca
+# https://stats.stackexchange.com/questions/69157/why-do-we-need-to-normalize-data-before-principal-component-analysis-pca
 logo_blue_gradient <- dashboardthemes::shinyDashboardLogoDIY(
-  
-  boldText = "SVD"
-  ,mainText = "Intuition"
-  ,textSize = 16
-  ,badgeText = "BETA"
-  ,badgeTextColor = "white"
-  ,badgeTextSize = 2
-  ,badgeBackColor = "#40E0D0"
-  ,badgeBorderRadius = 3
-  
+  boldText = "SVD",
+  mainText = "Intuition",
+  textSize = 16,
+  badgeText = "BETA",
+  badgeTextColor = "white",
+  badgeTextSize = 2,
+  badgeBackColor = "#40E0D0",
+  badgeBorderRadius = 3
 )
 
 source("globals.R")
@@ -17,54 +15,50 @@ source("globals.R")
 ui <- shinydashboardPlus::dashboardPagePlus(
   header = shinydashboardPlus::dashboardHeaderPlus(
     title = logo_blue_gradient
-    ),
+  ),
   skin = "blue-light",
   sidebar = shinydashboard::dashboardSidebar(
     shinydashboard::sidebarMenu(
-      id="sidebarmenu",
+      id = "sidebarmenu",
 
       shinydashboard::menuItem(
-        text = "IMAGE SVD", 
+        text = "IMAGE SVD",
         tabName = "TAB2",
         icon = shiny::icon("image")
       ),
-      
+
       shiny::conditionalPanel(
         "input.sidebarmenu === 'TAB2'",
         shiny::uiOutput("TAB2_CONTROLS")
       ),
-      
+
       shinydashboard::menuItem(
-        text = "TEXT SVD", 
+        text = "TEXT SVD",
         tabName = "TAB3",
         icon = icon("file-alt")
       ),
-      
+
       shiny::conditionalPanel(
         "input.sidebarmenu === 'TAB3'",
         shiny::uiOutput("TAB3_CONTROLS")
       ),
-      
+
       shinydashboard::menuItem(
-        text = "WHY SVD", 
+        text = "WHY SVD",
         tabName = "TAB1",
         icon = shiny::icon("question")
       ),
-      
+
       shiny::conditionalPanel(
         "input.sidebarmenu === 'TAB1'",
         shiny::uiOutput("TAB1_CONTROLS")
       )
-      
-
-      
-          
     )
   ),
   body = shinydashboard::dashboardBody(
-    
+
     # condense dataTable display
-    tags$head(tags$style(HTML('
+    tags$head(tags$style(HTML("
       table.dataTable thead th, 
       table.dataTable thead td {
         padding: 0px 2px !important;
@@ -74,15 +68,14 @@ ui <- shinydashboardPlus::dashboardPagePlus(
       table.dataTable tbody td {
         padding: 0 2px !important;
       }
-    '))),
-    
+    "))),
+
     # format the menus and boxes
     shinyEffects::setShadow(class = "dropdown-menu"),
     shinyEffects::setShadow(class = "box"),
-    
+
     # All tabs
     shinydashboard::tabItems(
-
       shinydashboard::tabItem(
         tabName = "TAB1",
         shinydashboard::box(
@@ -91,8 +84,8 @@ ui <- shinydashboardPlus::dashboardPagePlus(
           uiOutput("TAB1_BODY")
         )
       ),
-      
-      
+
+
       shinydashboard::tabItem(
         tabName = "TAB2",
         shinydashboard::box(
@@ -110,7 +103,6 @@ ui <- shinydashboardPlus::dashboardPagePlus(
           uiOutput("TAB3_BODY")
         )
       )
-      
     )
   )
 )
