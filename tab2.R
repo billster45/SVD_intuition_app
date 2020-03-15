@@ -140,7 +140,7 @@ img <- shiny::reactive({
     
     output$image_mt_tbl <- DT::renderDataTable({
       data_table_fun(df = image_mt, 
-                     table_title = paste("Matrix of origninal image: ",nrow(image_mt)," rows and ",ncol(image_mt)," columns"), 
+                     table_title = paste("Matrix of original image: ",nrow(image_mt)," rows and ",ncol(image_mt)," columns"), 
                      colours = "Blues",
                      font_perc = "80%",
                      dp = 2)

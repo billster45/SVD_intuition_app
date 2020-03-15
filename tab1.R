@@ -1,4 +1,3 @@
-# add chapter on PCS https://bookdown.org/rdpeng/exdata/dimension-reduction.html
 TAB1_SERVER <- function(input, output, session) {
   
 
@@ -20,12 +19,6 @@ TAB1_SERVER <- function(input, output, session) {
   
   output$TAB1_BODY <- renderUI({
     
-#https://shiny.rstudio.com/articles/tag-glossary.html
-# svd from scratch https://rpubs.com/aaronsc32/singular-value-decomposition-r and this https://web.mit.edu/be.400/www/SVD/Singular_Value_Decomposition.htm
-    #http://www.ams.org/publicoutreach/feature-column/fcarc-svd
-    #http://www.ams.org/publicoutreach/feature-column/fcarc-svd
-    #https://stats.idre.ucla.edu/r/codefragments/svd_demos/
-    #https://www.youtube.com/watch?v=4DI68P4hicQ
     ui <- shiny::fluidPage(
 
       doc <- tags$html(
@@ -35,7 +28,7 @@ TAB1_SERVER <- function(input, output, session) {
           shiny::img(src="https://live.staticflickr.com/4313/36003144451_eb1dd9db12_c.jpg", 
                      height="40%", width="40%", align="right")  ,
           
-          tags$h2("Why is learning SVD useful?"), 
+          tags$h2("Why is learning SVD intuitively useful?"), 
           
           tags$ol(
             
@@ -61,40 +54,40 @@ TAB1_SERVER <- function(input, output, session) {
           tags$ol(
             
             tags$li("SVD is a matrix factorisation technique where the image matrix (or the counts of words
-              in each document) are de-composed into three matricies, U, D and V. When multiplied together, the three matricies will exactly re-create the original
+              in each document) are de-composed into three matrices, U, D and V. When multiplied together, the three matrices will exactly re-create the original
               matrix."),
             
-            tags$li("The SVD magic happens when we truncate the three matricies before multipying them back together. This
+            tags$li("The SVD magic happens when we truncate the three matrices before multiplying them back together. This
               creates a new matrix with less information. For an image this will compress the information leading to an image that is fuzzier. While 
-              for text, SVD wiil give weight to words that are not in a document but are in documents similar to them (i.e. they shaare other words), 
+              for text, SVD will give weight to words that are not in a document but are in documents similar to them (i.e. they share other words), 
                     so improving text search.")
           ),
           
-          tags$h2("How is SVD calcualted in R practically and intuitively?"), 
+          tags$h2("How is SVD calculated in R practically and intuitively?"), 
           
           tags$ol(
-          
+            
             tags$li("Practically speaking, the original matrix A is multiplied
                      by the same matrix after it is transposed (i.e. swapping columns with rows) which we call AT."),
             
             tags$li("Multiplying a matrix by its transpose creates an orthogonal square matrix with the same number of rows as columns.
                      The multiplication is done twice in different orders then the eigenvectors are found for each one. 
-                     So the V matrix comes from the transposed matrix multiplied by the orignal matrix, ATA.
+                     So the V matrix comes from the transposed matrix multiplied by the original matrix, ATA.
                      And the U matrix comes from the original matrix multiplied by the transposed matrix, AAT."),
             
-            tags$li("The SVD method next finds the eigenvectors of ATA and AAT to create the V and U matricies respectively."),
+            tags$li("The SVD method next finds the eigenvectors of ATA and AAT to create the V and U matrices respectively."),
             
             tags$li(p("For the D (or diagonal) matrix of singular values, this is calculated by taking the square roots of the eigenvalues from either 
-                     of the V or U matricies. This method is well explained in R code in this excellent",
-                     shiny::a("example",
-                              href="https://rpubs.com/aaronsc32/singular-value-decomposition-r",
-                              target="_blank"), ". And we can intuitively understand how eigen decomposition works through
+                     of the V or U matrices. This method is well explained in R code in this excellent",
+                      shiny::a("example",
+                               href="https://rpubs.com/aaronsc32/singular-value-decomposition-r",
+                               target="_blank"), ". And we can intuitively understand how eigen decomposition works through
                      the amazing 3BlueBrown1 tutorial,", 
-                     shiny::a("Eigenvectors and eigenvalues",
-                              href="https://youtu.be/PFDu9oVAE-g",
-                              target="_blank")))
-            ),
-                    
+                      shiny::a("Eigenvectors and eigenvalues",
+                               href="https://youtu.be/PFDu9oVAE-g",
+                               target="_blank")))
+          ),
+          
           tags$h2("Why when we select all the singular vectors is the non-compressed image not identical to the original?"), 
           
           tags$ol(
@@ -104,22 +97,23 @@ TAB1_SERVER <- function(input, output, session) {
                       SVD the app has first scaled the matrix by subtracting the column mean and dividing each column by its standard deviation 
                       using base::scale(). Therefore, if you select the
                       maximum number of vectors in the image slider this creates the uncompressed image only after scaling. Scaling is a ",
-                      shiny::a("reccomended step in Principal Components analysis",
-                   href="https://www.theanalysisfactor.com/tips-principal-component-analysis/",
-                   target="_blank"),"so that the inputs are on a similar scale.")
-                   )
-            ),
+                      shiny::a("recommended step in Principal Components analysis",
+                               href="https://www.theanalysisfactor.com/tips-principal-component-analysis/",
+                               target="_blank"),"so that the inputs are on a similar scale.")
+            )
+          ),
           
           tags$h2("For the 'Memos' matrix after SVD some zeros have a negative sign that is different to the original TDM"), 
           
           tags$ol(
             
-            tags$li(p("The occurence of a negative sign that differs from the TDM is explained in",
+            tags$li(p("The occurrence of a negative sign that differs from the TDM is explained in",
                       shiny::a("'Resolving sign ambiguity in SVD'",
                                href="https://prod-ng.sandia.gov/techlib-noauth/access-control.cgi/2007/076422.pdf",
                                target="_blank"), "."))),
           
           tags$h2("Acknowledgements"), 
+          
           
           tags$ol(
             
