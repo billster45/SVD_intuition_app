@@ -14,6 +14,9 @@ library(magick)
 library(quanteda)
 library(inflection)
 library(dashboardthemes)
+library(ggforce)
+library(imager)
+library(magick)
 
 options(DT.options = list(
   pageLength = 12,
