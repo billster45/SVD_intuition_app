@@ -189,10 +189,10 @@ shiny::wellPanel(
           solidHeader = FALSE, 
           collapsible = TRUE,
           p("Text documents can be turned into matrix of numbers and SVD applied too. If we truncate the
-          three matricies and multipley (like we just have for an image) this is now called Latent Semantic Analysis.
+          three matricies and multiply (like we just have for an image) this is now called Latent Semantic Analysis.
             'Latent' means hidden, 'Semantic' is meaning (i.e. hidden meaning analysis). In LSA, a document is given 
-            some of the information value from words not inside the document, but those words are found 
-            inside documents that are similar to them.")
+            some of the information value from words not inside the document if those words are found 
+            inside documents that are similar.")
         )),
         
         
@@ -233,7 +233,7 @@ shiny::wellPanel(
       collapsible = TRUE,
       p("This table of text documents is turned into the Term Document Matrix (TDM) next to it. The TDM simply counts
              the number of times each word appears in each document. Stop words that nearly always appear in 
-              most documents are excluded from the TDM (e.g. 'and').")
+              most documents are excluded from the TDM (e.g. 'and' or 'the').")
     )),
     
     
@@ -248,14 +248,13 @@ shiny::wellPanel(
            status = "info", 
            solidHeader = FALSE, 
            collapsible = TRUE,
-           p("The matrix above has has SVD applied to decompose it into the U, D and V matricies below.
-           They are then truncated by the slider in the sidebar before being multiplied together to create this matrix.
-           Notice how words (or terms) that don't appear in some documents get a value after a truncated SVD is applied 
-           when similar documents do have that word. For example, in the 'Memos' documents, look at the word 'trees' in 
-           document m4. When
+           p("SVD has decompose the matrix above into the U, D and V matricies below.
+           The de-composed matrices are then truncated by the slider before being multiplied together to create the matrix above.
+           Notice how words (or terms) that don't appear in some documents get a value after a truncated SVD is applied. 
+           For example, in the 'Memos' documents, look at the word 'trees' in document m4. When
              2 singular vectors are chosen in the slider this has a value of 0.66 in the truncated SVD
-             matrix to the right, whereas in the TDM above it is zero. This would make that term available for that 
-             document and could improve the accuracy of text search, text classification or text clustering NLP methods.")
+             matrix. Whereas in the TDM the value is zero. So SVD can make the term 'trees' available for text search or 
+             text classification even though is does not appear in the document.")
          )
          
          
@@ -282,16 +281,16 @@ column(12,boxPlus(
   width = 12,
   closable = TRUE, 
   enable_label = TRUE,
-  label_text = 3,
+  label_text = 4,
   label_status = "info",
   status = "info", 
   solidHeader = FALSE, 
   collapsible = TRUE,
   p("These are the U, D and V matricies created from the Singular Value Decompostion of the TDM.
-         Each matrix is truncated by the number of singular vectors you select in the slider. Try setting the slider
-      to the maximum number of vectors. When these three full matricies are
+         Each matrix is truncated by the number of singular vectors selected in the slider. Try setting the slider
+      to the maximum number of vectors. When the full non-truncated matricies are
         multiplied, the matrix values above are identical to the orginal TDM. This demonstrates that the U, D and V
-        matricies contain all the information in the original TDM")
+        matricies contain all the information in the original TDM.")
 ))
 
 )

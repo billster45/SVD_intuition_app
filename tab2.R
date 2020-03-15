@@ -336,7 +336,7 @@ shiny::observeEvent(c(input$vectors,
                  status = "info", 
                  solidHeader = FALSE, 
                  collapsible = TRUE,
-                 p("This matrix of numbers contains all the information to plot the original image 
+                 p("This matrix of numbers contains all the information needed to plot the original image 
                    above ready for compressing with the Singular Value Decomposition method.")
                )),
         
@@ -351,11 +351,11 @@ shiny::observeEvent(c(input$vectors,
                  status = "info", 
                  solidHeader = FALSE, 
                  collapsible = TRUE,
-                 p("The image has been compressed using the number of singular vectors selected in the slider. 
-                          This 'scree' plot tells you what percentage of variance in the original matrix is 
+                 p("The image above has been compressed using the number of singular vectors selected in the slider. 
+                          The 'scree' plot above shows what percentage of variance in the original matrix is 
                           explained by the number of singular vectors selected. The 'knee' is the 
-                          number of vectors where the percentge of additional 
-                          variance explained tails off rapidly if a higher number of vectors were selected.")
+                          number of vectors where the percentage of additional 
+                          variance explained will tail off rapidly if more vectors are selected.")
                ))
         
        )
@@ -373,7 +373,7 @@ shiny::observeEvent(c(input$vectors,
       
       column(12,
              boxPlus(
-               title = "Original image matrix is decomposed by SVD into U, D, and V matricies, then truncated by the slider", 
+               title = "Original image matrix is decomposed by SVD into U, D, and V matricies that are truncated by the slider", 
                closable = TRUE,
                width = 12,
                enable_label = TRUE,
@@ -382,11 +382,11 @@ shiny::observeEvent(c(input$vectors,
                status = "info", 
                solidHeader = FALSE, 
                collapsible = TRUE,
-               p("The R function base::svd() has decomposed the matrix of the original image into these 
-               three matricies: U, D, and V. If they were multiplied together they would exactly re-create the image.
-               However, the number selected in the slider truncates each matrix. When the three truncated matricies
-                are multiplied together this creates the matrix below. Selecting the maximum number
-                of vectors in the slider re-creates the original image with no compression.")
+               p("The R function base::svd() decomposes the matrix of the original image into these 
+               three matricies: U, D, and V. If they are multiplied together without truncating they would exactly re-create the image.
+               However, the number selected in the slider truncates each matrix. Then, when multiplied together, 
+               they create the matrix below of the compressed image. Selecting the maximum number
+                of vectors in the slider will recreate the original image with no compression.")
              ))
       )
       
@@ -401,7 +401,7 @@ shiny::observeEvent(c(input$vectors,
                 table_reconstruct_mt,
                  
                boxPlus(
-                 title = "Truncated U, D and V matricies multiplied to create compressed image matrix", 
+                 title = "Truncated U, D and V matricies multiplied together to create the compressed image matrix", 
                  closable = TRUE,
                  width = 12,
                  enable_label = TRUE,
