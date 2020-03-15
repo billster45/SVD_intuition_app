@@ -28,11 +28,11 @@ TAB1_SERVER <- function(input, output, session) {
           shiny::img(src="https://live.staticflickr.com/4313/36003144451_eb1dd9db12_c.jpg", 
                      height="40%", width="40%", align="right")  ,
           
-          tags$h2("Why is learning SVD intuitively useful?"), 
+          tags$h2("Why is learning SVD intuitively so useful?"), 
           
           tags$ol(
             
-          tags$li(p("Singular Value Decomposition (SVD) is a powerful data analysis technique with many uses including data dimension reduction 
+          tags$li(p("Singular Value Decomposition (SVD) is a powerful data analysis technique with many uses. It inludes data dimension reduction 
           prior to Machine Learning through",
           shiny::a("Principal Components Analysis",
           href="https://towardsdatascience.com/dimensionality-reduction-does-pca-really-improve-classification-outcome-6e9ba21f0a32",
@@ -44,7 +44,7 @@ TAB1_SERVER <- function(input, output, session) {
           ),
           
           tags$li(p("By playing around with image compression and LSA with text in this app you might build a greater 
-                     and more intuitive understanding of SVD. And perhaps a readiness to use it more confidently and appropriately in your 
+                     and more intuitive understanding of SVD. And I hope a to use it more confidently and appropriately in your 
                      data analysis.")
                   )
           ),
@@ -57,10 +57,15 @@ TAB1_SERVER <- function(input, output, session) {
               in each document) are de-composed into three matrices, U, D and V. When multiplied together, the three matrices will exactly re-create the original
               matrix."),
             
-            tags$li("The SVD magic happens when we truncate the three matrices before multiplying them back together. This
+            tags$li(p("The SVD magic happens when we truncate the three matrices before multiplying them back together. This
               creates a new matrix with less information. For an image this will compress the information leading to an image that is fuzzier. While 
-              for text, SVD will give weight to words that are not in a document but are in documents similar to them (i.e. they share other words), 
-                    so improving text search.")
+              for text, SVD will give weight to words that are not in a document but are in documents similar to them (i.e. documents that have some of the same words).
+                    This can improve NLP tasks like text search or",
+                    
+                    shiny::a("document classification",
+                             href="https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/icdm2004-llsi.pdf",
+                             target="_blank")),",")
+                    
           ),
           
           tags$h2("How is SVD calculated in R practically and intuitively?"), 
@@ -81,8 +86,7 @@ TAB1_SERVER <- function(input, output, session) {
                      of the V or U matrices. This method is well explained in R code in this excellent",
                       shiny::a("example",
                                href="https://rpubs.com/aaronsc32/singular-value-decomposition-r",
-                               target="_blank"), ". And we can intuitively understand how eigen decomposition works through
-                     the amazing 3BlueBrown1 tutorial,", 
+                               target="_blank"), ". And we can intuitively understand how eigen decomposition works through the amazing 3BlueBrown1 tutorial,", 
                       shiny::a("Eigenvectors and eigenvalues",
                                href="https://youtu.be/PFDu9oVAE-g",
                                target="_blank")))
