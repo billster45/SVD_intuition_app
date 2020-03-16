@@ -342,7 +342,7 @@ TAB2_SERVER <- function(input, output, session) {
               solidHeader = FALSE,
               collapsible = TRUE,
               p("This matrix of numbers contains all the information needed to plot the original image 
-                   above ready for compressing with the Singular Value Decomposition method.")
+                   above ready for compressing with Singular Value Decomposition.")
             )
           ),
 
@@ -358,11 +358,11 @@ TAB2_SERVER <- function(input, output, session) {
               status = "info",
               solidHeader = FALSE,
               collapsible = TRUE,
-              p("The image above has been compressed using the number of singular vectors selected in the slider. 
-                          The 'scree' plot above shows what percentage of variance in the original matrix is 
+              p("The top-right image has been compressed using the number of singular vectors selected in the slider. 
+                          The 'scree' plot just above shows what percentage of variance in the original matrix that is 
                           explained by the number of singular vectors selected. The 'knee' is the 
                           number of vectors where the percentage of additional 
-                          variance explained will tail off rapidly if more vectors are selected.")
+                          variance explained tails off rapidly as more vectors are selected.")
             )
           )
         )
@@ -392,7 +392,7 @@ TAB2_SERVER <- function(input, output, session) {
                three matricies: U, D, and V. If they are multiplied together without truncating they would exactly re-create the image.
                However, the number selected in the slider truncates each matrix. Then, when multiplied together, 
                they create the matrix below of the compressed image. Selecting the maximum number
-                of vectors in the slider will recreate the original image with no compression.")
+                of vectors in the slider re-creates the original image with no compression.")
             )
           )
         )
@@ -416,7 +416,9 @@ TAB2_SERVER <- function(input, output, session) {
               solidHeader = FALSE,
               collapsible = TRUE,
               p("The three truncated U, D and V matricies above have been trunctad by the slider then multiplied together to 
-                 create this matrix. This is the matrix that is used to plot the compressed image above.")
+                 create this matrix. This is the matrix that is used to plot the compressed image above. Note that when selecting the
+                maximum number of vectors it does not exactly re-create the original image matrix and the image can look darker then the original.
+                This is explained in the final page of this app.")
             )
           )
         )

@@ -118,11 +118,11 @@ TAB1_SERVER <- function(input, output, session) {
 
           tags$ul(
             tags$li(p(
-              "Selecting all the singular values in the slider does not exactly re-create the image and it can look darker. 
-            Before applying 
-                      SVD the app has first scaled the matrix by subtracting the column mean and dividing each column by its standard deviation 
+              "Selecting all the singular values in the slider does not exactly re-create the original image matrix and the image can look darker then the original. 
+            This is because, before applying 
+                      SVD, the app has first scaled the matrix by subtracting the column mean and dividing each column by its standard deviation 
                       using base::scale(). Therefore, if you select the
-                      maximum number of vectors in the image slider this creates the uncompressed image only after scaling. Scaling is a ",
+                      maximum number of vectors in the slider this re-creates the original uncomopressed image but only after this scaling. Scaling is a ",
               shiny::a("recommended step in Principal Components analysis",
                 href = "https://www.theanalysisfactor.com/tips-principal-component-analysis/",
                 target = "_blank"
