@@ -79,7 +79,7 @@ ui <- shinydashboardPlus::dashboardPagePlus(
       shinydashboard::tabItem(
         tabName = "TAB1",
         shinydashboard::box(
-          # title = "Why is Singular Value Decomposition so fundamental to Data Science?",
+          title = shiny::h2("Why is Singular Value Decomposition so useful to understand?"),
           width = NULL,
           uiOutput("TAB1_BODY")
         )
@@ -89,7 +89,7 @@ ui <- shinydashboardPlus::dashboardPagePlus(
       shinydashboard::tabItem(
         tabName = "TAB2",
         shinydashboard::box(
-          title = "Image compression with Singular Value Decomposition",
+          title = shiny::h2("Image compression with Singular Value Decomposition"),
           width = NULL,
           uiOutput("TAB2_BODY")
         )
@@ -98,7 +98,7 @@ ui <- shinydashboardPlus::dashboardPagePlus(
       shinydashboard::tabItem(
         tabName = "TAB3",
         shinydashboard::box(
-          title = "Latent Semantic Analysis of text with Singular Value Decomposition",
+          title = shiny::h2("Latent Semantic Analysis of text with Singular Value Decomposition"),
           width = NULL,
           uiOutput("TAB3_BODY")
         )

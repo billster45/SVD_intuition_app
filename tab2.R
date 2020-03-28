@@ -59,13 +59,11 @@ TAB2_SERVER <- function(input, output, session) {
 
 
   # Runs based on the image selected
-  shiny::observeEvent(input$select_image, {
+  shiny::observeEvent(c(input$select_image,input$radio_image)
+                      , {
 
-    # if ( !is.null(input$filedata) & input$select_image == 1) {
     if (input$select_image == 1) {
       image <- img()
-      # } else if ( is.null(input$filedata) & input$select_image == 1) {
-      #     return()
     } else if (input$select_image == 2) {
       image <- books
     } else if (input$select_image == 3) {
@@ -77,32 +75,35 @@ TAB2_SERVER <- function(input, output, session) {
       graphics::plot(image, axes = FALSE, main = "Original image")
     })
 
-    image_scaled <- base::scale(image)
-
-    # replace any NaN with 0
-    image_scaled[is.nan(image_scaled)] <- 0
-
+    # scale image matrix if chosen by raiod
+    if (input$radio_image == 1) {
+      image_scaled <- image
+    } else if (input$radio_image == 2) {
+      image_scaled <- base::scale(image)
+      image_scaled[is.nan(image_scaled)] <- 0
+    }
+    
     # Decompose orginal image with SVD
     SVD <- base::svd(image_scaled)
 
     # Find the maximum number of columns in the matrix for the slider and update it
     # max_dim <- max_dim_fun(SVD)
-    shiny::updateSliderInput(session, "vectors", max = ncol(SVD$v))
+    shiny::updateSliderInput(session, "values", max = ncol(SVD$v))
 
-    # Output variance explained by different numbers of singular vectors
+    # Output variance explained by different numbers of singular values
     var_expl <- SVD$d^2 / sum(SVD$d^2)
     var_expl_df <- as.data.frame(var_expl) %>%
-      dplyr::mutate(singular_vectors = row_number())
+      dplyr::mutate(singular_values = row_number())
 
     # find knee
     knee <- inflection::uik(
-      x = var_expl_df$singular_vectors,
+      x = var_expl_df$singular_values,
       y = var_expl_df$var_expl
     )
 
     output$kneeBox <- shinydashboard::renderValueBox({
       shinydashboard::valueBox(
-        knee, "singular vectors at the 'knee' of the variance explained plot",
+        knee, "...the number of singular values at the 'knee' of this variance explained plot",
         # icon = icon("list"),
         color = "light-blue",
         # width = NULL,
@@ -110,13 +111,13 @@ TAB2_SERVER <- function(input, output, session) {
       )
     })
 
-    shiny::updateSliderInput(session, "vectors", value = knee)
+    shiny::updateSliderInput(session, "values", value = knee)
 
     output$var_explained <- shiny::renderPlot({
       shiny::isolate(var_expl_df %>%
         ggplot2::ggplot() +
         ggplot2::aes(
-          x = singular_vectors,
+          x = singular_values,
           y = var_expl,
         ) +
         ggplot2::geom_point() +
@@ -132,9 +133,9 @@ TAB2_SERVER <- function(input, output, session) {
           zoom.size = 0.8
         ) +
         ggplot2::labs(
-          title = "Variance explained by singular vectors",
-          subtitle = paste("The 'knee' is at", knee, "singular vectors"),
-          x = "Number of singular vectors",
+          title = "Variance explained by singular values",
+          subtitle = paste("The 'knee' is at", knee, "singular values"),
+          x = "Number of singular values",
           y = "% of variance explained"
         ) +
         ggplot2::scale_y_continuous(labels = scales::percent) +
@@ -156,11 +157,12 @@ TAB2_SERVER <- function(input, output, session) {
     })
   })
 
-  # vectors change
+  # values change
   shiny::observeEvent(c(
-    input$vectors,
+    input$values,
     input$select_image,
-    input$filedata
+    input$filedata,
+    input$radio_image
   ), {
     if (input$select_image == 1) {
       image <- img()
@@ -170,20 +172,23 @@ TAB2_SERVER <- function(input, output, session) {
       image <- grey_boat
     }
 
-    image_scaled <- base::scale(image)
-
-    # replace any NaN with 0
-    image_scaled[is.nan(image_scaled)] <- 0
-
+    # sacle image matrix if chosen by raiod
+    if (input$radio_image == 1) {
+      image_scaled <- image
+    } else if (input$radio_image == 2) {
+      image_scaled <- base::scale(image)
+      image_scaled[is.nan(image_scaled)] <- 0
+    }
+    
     # Decompose orginal image with SVD
     SVD <- base::svd(image_scaled)
 
     # Find the maximum number of columns in the matrix for the slider and update it
-    shiny::updateSliderInput(session, "vectors", max = ncol(SVD$u))
+    shiny::updateSliderInput(session, "values", max = ncol(SVD$u))
 
-    u <- SVD$u[, 1:input$vectors]
-    d <- base::diag(SVD$d[1:input$vectors]) # placing values on the diagonal
-    v <- base::t(SVD$v[, 1:input$vectors]) # transpose the matrix (swap rows with columns)
+    u <- SVD$u[, 1:input$values]
+    d <- base::diag(SVD$d[1:input$values]) # placing values on the diagonal
+    v <- base::t(SVD$v[, 1:input$values]) # transpose the matrix (swap rows with columns)
 
     reconstruct_mt <- u %*% d %*% v
 
@@ -203,7 +208,7 @@ TAB2_SERVER <- function(input, output, session) {
 
     # Output the compressed image
     output$imgPlot_red <- shiny::renderPlot({
-      graphics::plot(reconstruct, axes = FALSE, main = paste0("Compressed with first ", as.character(input$vectors), " vectors"))
+      graphics::plot(reconstruct, axes = FALSE, main = paste0("Compressed with first ", as.character(input$values), " values"))
     })
 
 
@@ -267,6 +272,8 @@ TAB2_SERVER <- function(input, output, session) {
 
     ui <- shiny::fluidPage(
       width = 12,
+      
+      tags$h3("1 Select an image and compress with the slider"),
 
       shiny::wellPanel(
         shiny::fluidRow(
@@ -277,7 +284,7 @@ TAB2_SERVER <- function(input, output, session) {
 
             # select your image
             shiny::selectInput("select_image",
-              label = "1. Select image to compress",
+              label = "Select image to compress",
               choices = list(
                 "Your upload" = 1,
                 "Apollo 11" = 2,
@@ -289,7 +296,7 @@ TAB2_SERVER <- function(input, output, session) {
             # upload your own image
             shiny::fileInput(
               inputId = "filedata",
-              label = "2. Upload an image (optional)"
+              label = "Or upload your own image (optional)"
               # ,
               # accept = c(".png",".jpg")
             )
@@ -300,17 +307,28 @@ TAB2_SERVER <- function(input, output, session) {
 
             red_img_plot,
 
-            # select how many singular vectors to compress
+            # select how many singular values to compress
             shiny::sliderInput(
-              inputId = "vectors",
-              label = "3. Select number of singular vectors to compress image",
+              inputId = "values",
+              label = "Select number of values to compress image",
               min = 2,
               max = 20,
               value = 2,
               step = 1
-            )
+            ),
+            
+            shiny::radioButtons("radio_image", label = "Centre and Scale Image Matrix?",
+                                choices = list("Do not centre or scale" = 1,"Centre & scale" = 2 ), 
+                                inline = TRUE,
+                                selected = 1)
           )
-        ),
+        )
+        
+      ),
+      
+      shiny::wellPanel(
+        
+        
         shiny::fluidRow(
           column(
             6,
@@ -332,7 +350,7 @@ TAB2_SERVER <- function(input, output, session) {
           column(
             6,
             boxPlus(
-              title = "Original image and matrix",
+              title = "Original image matrix",
               closable = TRUE,
               width = 12,
               enable_label = TRUE,
@@ -341,15 +359,16 @@ TAB2_SERVER <- function(input, output, session) {
               status = "info",
               solidHeader = FALSE,
               collapsible = TRUE,
-              p("This matrix of numbers contains all the information needed to plot the original image 
-                   above ready for compressing with Singular Value Decomposition.")
+              p("This is the matrix of numbers that is used to plot the original image 
+                   above. Using the slider we manipulate this matrix with Singular Value Decomposition (SVD)
+                   to create a new matrix. When plotted, the image is compressed and can be seen top right.")
             )
           ),
 
           column(
             6,
             boxPlus(
-              title = "Compressed image and variance explained",
+              title = "Variance explained",
               closable = TRUE,
               width = 12,
               enable_label = TRUE,
@@ -358,15 +377,17 @@ TAB2_SERVER <- function(input, output, session) {
               status = "info",
               solidHeader = FALSE,
               collapsible = TRUE,
-              p("The top-right image has been compressed using the number of singular vectors selected in the slider. 
-                          The 'scree' plot just above shows what percentage of variance in the original matrix that is 
-                          explained by the number of singular vectors selected. The 'knee' is the 
-                          number of vectors where the percentage of additional 
-                          variance explained tails off rapidly as more vectors are selected.")
+              p(" 
+                          This 'scree' plot just above shows what percentage of variance in the original matrix is 
+                          explained by the number of singular values selected from the Diagonal matrix. The 'knee' is the 
+                          number of values from where the amount of additional 
+                          variance explained will tail off rapidly if more values are selected.")
             )
           )
         )
       ),
+      
+      tags$h3("2 The original matrix de-composed by SVD into U, D and V and then truncated"),
 
       shiny::wellPanel(
         fluidRow(
@@ -389,14 +410,19 @@ TAB2_SERVER <- function(input, output, session) {
               solidHeader = FALSE,
               collapsible = TRUE,
               p("The R function base::svd() decomposes the matrix of the original image into these 
-               three matricies: U, D, and V. If they are multiplied together without truncating they would exactly re-create the image.
-               However, the number selected in the slider truncates each matrix. Then, when multiplied together, 
-               they create the matrix below of the compressed image. Selecting the maximum number
-                of vectors in the slider re-creates the original image with no compression.")
+               three matricies: U, D, and V. The number selected in the slider truncates each matrix before 
+               they are multiplied together to create the matrix below of the compressed image. If you select the maximum number
+                in the slider then there is no truncation and the original image will be exactly re-created. 
+                This demonstrates that SVD factors the original maatrix
+                into U, D and V with no loss of information. The slider truncates the right most columns of the 
+                U matrix (called the left singular vectors), the bottom rows of the V matrix, and the right most values of the 
+                D matrix (called singular values).")
             )
           )
         )
       ),
+      
+      tags$h3("3 The compressed matrix (U x V x D)."),
 
       shiny::wellPanel(
         fluidRow(
@@ -406,7 +432,7 @@ TAB2_SERVER <- function(input, output, session) {
             table_reconstruct_mt,
 
             boxPlus(
-              title = "Truncated U, D and V matricies multiplied together to create the compressed image matrix",
+              title = "Truncated U, D and V matricies when multiplied together to create the compressed image matrix",
               closable = TRUE,
               width = 12,
               enable_label = TRUE,
@@ -417,8 +443,8 @@ TAB2_SERVER <- function(input, output, session) {
               collapsible = TRUE,
               p("The three truncated U, D and V matricies above have been trunctad by the slider then multiplied together to 
                  create this matrix. This is the matrix that is used to plot the compressed image above. Note that when selecting the
-                maximum number of vectors it does not exactly re-create the original image matrix and the image can look darker then the original.
-                This is explained in the final page of this app.")
+                maximum number in the slider, and the option to 'Centre and Scale' is chosen (top-right),
+                the image will look darker then the original because of the change to the original image matrix from this transformation.")
             )
           )
         )

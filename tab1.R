@@ -17,7 +17,7 @@ TAB1_SERVER <- function(input, output, session) {
             height = "40%", width = "40%", align = "right"
           ),
 
-          tags$h2("Why is learning SVD intuitively so useful?"),
+          tags$h3("Where is SVD used? More places than you think"),
 
           tags$ul(
             tags$li(p(
@@ -55,12 +55,12 @@ TAB1_SERVER <- function(input, output, session) {
           this app tries not to assume any previous technical knowledge."
             )),
 
-            tags$li(p("By playing with image compression and LSA with text in this app I hope you can build a more
-          intuitive understanding of SVD. And from this greater intuition you might use SVD more confidently and appropriately in your 
+            tags$li(p("By playing with both image compression and LSA and PCA with text in this app I hope you can build a more
+          intuitive understanding of SVD. And from this greater intuition you might use SVD and PCA more confidently and appropriately in your 
                      data analysis."))
           ),
 
-          tags$h2("What does SVD do to a matrix of numbers?"),
+          tags$h3("What does SVD do to a matrix of numbers?"),
 
           tags$ul(
             tags$li("SVD is a matrix factorisation technique where the image matrix (or the counts of words
@@ -69,7 +69,8 @@ TAB1_SERVER <- function(input, output, session) {
 
             tags$li(p(
               "The SVD magic happens when we truncate the three matrices before multiplying them back together. This
-              creates a new matrix with less information. For an image this will compress the information leading to an image that is fuzzier. While 
+              creates a new matrix with less information. For an image this will compress the information leading to an image that is fuzzier but still
+              very recognisable as the most important information is kept. While 
               for text, SVD will give weight to words that are not in a document but are in documents similar to them (i.e. documents that have some of the same words).
                     This can improve NLP tasks like text search or",
 
@@ -80,7 +81,7 @@ TAB1_SERVER <- function(input, output, session) {
             ), ",")
           ),
 
-          tags$h2("How is SVD calculated practically and intuitively?"),
+          tags$h3("How is SVD calculated practically and intuitively?"),
 
           tags$ol(
             tags$li("Practically speaking, the original matrix A is multiplied
@@ -110,15 +111,23 @@ TAB1_SERVER <- function(input, output, session) {
               shiny::a("Essence of linear algebra",
                 href = "https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab",
                 target = "_blank"
-              ), "."
-            ))
+              ), ". And for a fantastic intuitive explanation of how Principal Components analysis works try, ",
+              
+              shiny::a("Principal Component Analysis in 6 steps",
+                       href = "https://coolstatsblog.com/2015/03/21/principal-component-analysis-explained/",
+                       target = "_blank"
+              )
+              
+            )
+            
+            )
           ),
 
-          tags$h2("Why, when all singular vectors are selected, is the non-compressed image not identical to the original?"),
+          tags$h3("Why, when all singular vectors are selected, is the non-compressed image not identical to the original?"),
 
           tags$ul(
             tags$li(p(
-              "Selecting all the singular values in the slider does not exactly re-create the original image matrix and the image can look darker then the original. 
+              "Selecting the maximum number in the slider does not exactly re-create the original image matrix and the image can look darker then the original. 
             This is because, before applying 
                       SVD, the app has first scaled the matrix by subtracting the column mean and dividing each column by its standard deviation 
                       using base::scale(). Therefore, if you select the
@@ -130,7 +139,7 @@ TAB1_SERVER <- function(input, output, session) {
             ))
           ),
 
-          tags$h2("Why, when all singular values are selected for the 'Memos' Term Document Matrix, do some zeros have a negative sign in the reconstructed matrix?"),
+          tags$h3("Why, when all singular values are selected for the 'Memos' Term Document Matrix, do some zeros have a negative sign in the reconstructed matrix?"),
 
           tags$ul(
             tags$li(p(
@@ -142,7 +151,7 @@ TAB1_SERVER <- function(input, output, session) {
             ))
           ),
 
-          tags$h2("Acknowledgements"),
+          tags$h3("Acknowledgements"),
 
 
           tags$ul(
