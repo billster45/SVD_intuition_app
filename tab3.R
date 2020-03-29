@@ -1,8 +1,5 @@
-#
 TAB3_SERVER <- function(input, output, session) {
 
-
-  # https://tutorials.quanteda.io/basic-operations/tokens/tokens_select/
   txt1 <- c(
     c1 = "Human machine interface for ABC computer applications",
     c2 = "A survey of user opinion of computer system response time",
@@ -23,13 +20,11 @@ TAB3_SERVER <- function(input, output, session) {
 
   ## ---- server logic ----
 
-
-
   shiny::observeEvent(c(
     input$select_text,
     input$values_text,
-    input$radio), {
-      
+    input$radio
+  ), {
     if (input$select_text == 1) {
       txt <- txt1
     } else if (input$select_text == 2) {
@@ -49,22 +44,23 @@ TAB3_SERVER <- function(input, output, session) {
         )
     })
 
-    # convert text to matrix
+    
+    # Tokensie the text
     toks <- quanteda::tokens(txt)
-    toks_nostop <- quanteda::tokens_select(toks, c("human", "interface", "computer", "user", "system", "response", "time", "EPS", "survey", "trees", "graph", "minors"),
-      selection = "keep", padding = FALSE
-    )
-
+    
+    # Depending on docs chosen, tokenise the text to single words and remove stop words
     if (input$select_text == 1) {
-      mydfm <- quanteda::dfm(toks_nostop)
+      toks_nostop <- quanteda::tokens_select(toks, c("human", "interface", "computer", "user", "system", "response", "time", "EPS", "survey", "trees", "graph", "minors"),
+                                             selection = "keep", padding = FALSE)
+        mydfm <- quanteda::dfm(toks_nostop)
     } else if (input$select_text == 2) {
       mydfm <- quanteda::dfm(toks, remove = stopwords())
     }
 
-    # Convert to a term document feature matrix to match the example
+    # Transpose Document Term Matrix to a Term Document Matrix to match the orientation in the literature
     tdm <<- base::t(as.matrix(mydfm))
 
-    # output the tdm
+    # output the tdm as a table
     output$tdm_tbl <- DT::renderDataTable({
       data_table_fun(
         df = tdm,
@@ -75,22 +71,20 @@ TAB3_SERVER <- function(input, output, session) {
       )
     })
 
-    # decompose the matrix
+    # decompose the matrix with SVD
     SVD_text <<- base::svd(tdm)
 
     # Find the maximum number of columns in the matrix for the slider and update it
     shiny::updateSliderInput(session, "values_text", max = ncol(SVD_text$u))
-  
 
-
-      
+    # Truncate the matrices from SVD according to the slider value
     u_text <- SVD_text$u[, 1:input$values_text]
     rownames(u_text) <- rownames(tdm)
     d_text <- base::diag(SVD_text$d[1:input$values_text]) # placing values on the diagonal
     v_text <- base::t(SVD_text$v[, 1:input$values_text]) # transpose the matrix (swap rows with columns)
     colnames(v_text) <- colnames(tdm)
 
-    # output the decomposed matricies
+    # output the decomposed matrices
     # U matrix table
     output$u_text_tbl <- DT::renderDataTable({
       data_table_fun(
@@ -124,9 +118,11 @@ TAB3_SERVER <- function(input, output, session) {
       )
     })
 
-    # Reconstruct
+    # Multiply the truncated matrices together to perform the LSA
     reconstruct_mt_text <- u_text %*% d_text %*% v_text
 
+
+    # Add the document and word names to the reconstructed matrix
     colnames(reconstruct_mt_text) <- colnames(tdm)
     rownames(reconstruct_mt_text) <- rownames(tdm)
 
@@ -134,25 +130,25 @@ TAB3_SERVER <- function(input, output, session) {
       data_table_fun(
         df = reconstruct_mt_text,
         table_title = paste("Latent Semantic Analysis of the TDM (U x D x V): ", nrow(reconstruct_mt_text), " rows and ", ncol(reconstruct_mt_text), " columns"),
-        colours = "Blues",
+        colours = "Oranges",
         font_perc = "100%",
         dp = 2
       )
     })
-    
-    
+
+
     ## ---- PCA Section SVD----
-    
-    # first scale and centre the tdm in both the SVD and prcomp of the user selects it
+
+    # Option for user to first scale and centre the tdm for both the SVD and prcomp 
     if (input$radio == 2) {
-      tdm_scale <- tdm  
+      tdm_scale <- tdm
       myPCA <- stats::prcomp(tdm, scale. = FALSE, center = FALSE)
     } else if (input$radio == 1) {
-      tdm_scale <- base::scale(tdm, center = TRUE, scale = TRUE) 
+      tdm_scale <- base::scale(tdm, center = TRUE, scale = TRUE)
       myPCA <- stats::prcomp(tdm, scale. = TRUE, center = TRUE)
     }
-    
-    # output the tdm whether raw or scaled
+
+    # output the tdm (whether raw or centred and scaled)
     output$tdm_scale_tbl <- DT::renderDataTable({
       data_table_fun(
         df = tdm_scale,
@@ -162,17 +158,17 @@ TAB3_SERVER <- function(input, output, session) {
         dp = 2
       )
     })
-    
+
     # SVD of the scaled (or not) tdm
     SVD_text_scaled <- base::svd(tdm_scale)
-    
+
     u_text_scaled <- SVD_text_scaled$u
     rownames(u_text_scaled) <- rownames(tdm)
     d_text_scaled <- base::diag(SVD_text_scaled$d) # placing values on the diagonal
-    v_text_scaled <- SVD_text_scaled$v 
+    v_text_scaled <- SVD_text_scaled$v
     rownames(v_text_scaled) <- colnames(tdm)
-    
-    # output the decomposed matricies
+
+    # output the decomposed matrices
     # U matrix table
     output$u_text_scaled_tbl <- DT::renderDataTable({
       data_table_fun(
@@ -183,7 +179,7 @@ TAB3_SERVER <- function(input, output, session) {
         dp = 2
       )
     })
-    
+
     # V matrix table
     output$v_text_scaled_tbl <- DT::renderDataTable({
       data_table_fun(
@@ -194,7 +190,7 @@ TAB3_SERVER <- function(input, output, session) {
         dp = 2
       )
     })
-    
+
     # D matrix table
     output$d_text_scaled_tbl <- DT::renderDataTable({
       data_table_fun(
@@ -205,12 +201,12 @@ TAB3_SERVER <- function(input, output, session) {
         dp = 2
       )
     })
-    
+
     # convert D matrix to the eigenvalues calcualted by PCA
     # using this guide https://genomicsclass.github.io/book/pages/pca_svd.html
-    eigenvalues_SVD <- SVD_text_scaled$d^2/(nrow(tdm)-1)
+    eigenvalues_SVD <- SVD_text_scaled$d^2 / (nrow(tdm) - 1)
 
-    eigenvalues_svd_df <- as.data.frame(eigenvalues_SVD) 
+    eigenvalues_svd_df <- as.data.frame(eigenvalues_SVD)
     eigenvalues_svd_df <- base::t(eigenvalues_svd_df)
 
     output$SVD_eigen_tbl <- DT::renderDataTable({
@@ -222,9 +218,9 @@ TAB3_SERVER <- function(input, output, session) {
         dp = 2
       )
     })
-    
-    
-        
+
+
+
     # U x V to create SVD PCA Scores equivalent
     SVD_PCAscores <- SVD_text_scaled$u %*% base::diag(SVD_text_scaled$d)
     rownames(SVD_PCAscores) <- rownames(tdm)
@@ -238,114 +234,127 @@ TAB3_SERVER <- function(input, output, session) {
         dp = 2
       )
     })
-    
+
     # scores ggplot
     output$SVD_PCAscores_plot <- shiny::renderPlot({
       shiny::isolate(
-        
-    SVD_PCAscores[,1:2] %>% 
-      as.data.frame() %>% 
-      dplyr::mutate(terms = rownames(SVD_PCAscores)) %>% 
-      ggplot2::ggplot() +
-      ggplot2::aes(x = V1,
-                   y = V2,
-                   label = terms) +
-      ggplot2::geom_point() +
-      ggrepel::geom_text_repel(aes(label = terms)) +
-      ggplot2::geom_hline(yintercept=0,
-                          linetype = 2,
-                          linetype = 2) +
-      ggplot2::geom_vline(xintercept=0) +
-      ggplot2::theme_minimal() +
-      ggplot2::labs(title = "PCA Scores for each Term",
-                    subtitle = "The scores in the first and second columns of the U x D matrix")
-    
+        SVD_PCAscores[, 1:2] %>%
+          as.data.frame() %>%
+          dplyr::mutate(terms = rownames(SVD_PCAscores)) %>%
+          ggplot2::ggplot() +
+          ggplot2::aes(
+            x = V1,
+            y = V2,
+            label = terms
+          ) +
+          ggplot2::geom_point() +
+          ggrepel::geom_text_repel(aes(label = terms)) +
+          ggplot2::geom_hline(
+            yintercept = 0,
+            linetype = 2,
+            linetype = 2
+          ) +
+          ggplot2::geom_vline(xintercept = 0) +
+          ggplot2::theme_minimal() +
+          ggplot2::labs(
+            title = "PCA Scores for each Term",
+            subtitle = "The scores in the first and second columns of the U x D matrix"
+          )
       )
-      
     })
-    
-    #loadings ggplot
-    SVD_PCAloadings <- SVD_text_scaled$v[,1:2]  
-    rownames(SVD_PCAloadings) <- colnames(tdm) 
-    SVD_PCAloadings <- SVD_PCAloadings %>% as.data.frame() %>% 
-    dplyr::mutate(docs = rownames(SVD_PCAloadings)) 
-    
+
+    # loadings ggplot
+    SVD_PCAloadings <- SVD_text_scaled$v[, 1:2]
+    rownames(SVD_PCAloadings) <- colnames(tdm)
+    SVD_PCAloadings <- SVD_PCAloadings %>%
+      as.data.frame() %>%
+      dplyr::mutate(docs = rownames(SVD_PCAloadings))
+
     output$SVD_PCAloadings_plot <- shiny::renderPlot({
       shiny::isolate(
-    
-      SVD_PCAloadings %>% 
-      ggplot2::ggplot() +
-      ggplot2::aes(x = V1,
-                   y = V2,
-                   label = docs) +
-      ggplot2::geom_point(colour = "white") +
-      ggrepel::geom_text_repel(aes(label = docs), #https://cran.r-project.org/web/packages/ggrepel/vignettes/ggrepel.html
-                               colour = "#3F9DAB",
-                               force = 10) +
-      ggplot2::geom_hline(yintercept=0,
-                          linetype = 2) +
-      ggplot2::geom_vline(xintercept=0,
-                          linetype = 2) +
-      ggplot2::theme_minimal() +
-      ggplot2::geom_segment(aes(x = 0, y = 0, xend = V1, yend = V2),
-                              arrow = arrow(length = unit(0.2,"cm"),
-                                            type = "closed",
-                              ),
-                              colour = "#3F9DAB") +
-      ggplot2::labs(title = "PCA Loadings for each Document",
-                      subtitle = "The scores in the first and second columns of the V matrix")
-      
-    
+        SVD_PCAloadings %>%
+          ggplot2::ggplot() +
+          ggplot2::aes(
+            x = V1,
+            y = V2,
+            label = docs
+          ) +
+          ggplot2::geom_point(colour = "white") +
+          ggrepel::geom_text_repel(aes(label = docs), # https://cran.r-project.org/web/packages/ggrepel/vignettes/ggrepel.html
+            colour = "#3F9DAB",
+            force = 10
+          ) +
+          ggplot2::geom_hline(
+            yintercept = 0,
+            linetype = 2
+          ) +
+          ggplot2::geom_vline(
+            xintercept = 0,
+            linetype = 2
+          ) +
+          ggplot2::theme_minimal() +
+          ggplot2::geom_segment(aes(x = 0, y = 0, xend = V1, yend = V2),
+            arrow = arrow(
+              length = unit(0.2, "cm"),
+              type = "closed",
+            ),
+            colour = "#3F9DAB"
+          ) +
+          ggplot2::labs(
+            title = "PCA Loadings for each Document",
+            subtitle = "The scores in the first and second columns of the V matrix"
+          )
       )
-      
     })
-    
+
     # SVD bi-plot
-    #SVD_PCAloadings
-        
+    # SVD_PCAloadings
+
     # Do the scree plot by hand with SVD first
     var_expl_text <- SVD_text_scaled$d^2 / sum(SVD_text_scaled$d^2)
     var_expl_text_df <- as.data.frame(var_expl_text) %>%
       dplyr::mutate(singular_values = row_number())
-    
+
     output$var_explained_text <- shiny::renderPlot({
       shiny::isolate(var_expl_text_df %>%
-                       ggplot2::ggplot() +
-                       ggplot2::aes(
-                         x = singular_values,
-                         y = var_expl_text,
-                         label = var_expl_text
-                       ) +
-                       ggplot2::geom_point() +
-                       ggplot2::geom_line(linetype = 2) +
-                       ggplot2::theme(
-                         legend.position = "none",
-                         plot.title = element_text(size = 14, face = "bold"),
-                         axis.text = element_text(size = 12, face = "bold"),
-                         axis.title = element_text(size = 14, face = "bold")) +
-                       ggrepel::geom_text_repel(aes(label = scales::percent(var_expl_text,
-                                                                      accuracy = 0.1))) +
-                       ggplot2::labs(
-                         title = "Scree plot from base::svd() results",
-                         subtitle = "Each squared singular value divided by the sum total of all squared values",
-                         x = "Number of singular values",
-                         y = "% of variance explained"
-                       ) +
-                       ggplot2::scale_y_continuous(labels = scales::percent) +
-                       ggplot2::scale_x_continuous(breaks = seq(min(var_expl_text_df$singular_values),
-                                                                max(var_expl_text_df),
-                                                                1)) +
-                       ggplot2::theme_minimal()
-      )
-                     
+        ggplot2::ggplot() +
+        ggplot2::aes(
+          x = singular_values,
+          y = var_expl_text,
+          label = var_expl_text
+        ) +
+        ggplot2::geom_point() +
+        ggplot2::geom_line(linetype = 2) +
+        ggplot2::theme(
+          legend.position = "none",
+          plot.title = element_text(size = 14, face = "bold"),
+          axis.text = element_text(size = 12, face = "bold"),
+          axis.title = element_text(size = 14, face = "bold")
+        ) +
+        ggrepel::geom_text_repel(aes(label = scales::percent(var_expl_text,
+          accuracy = 0.1
+        ))) +
+        ggplot2::labs(
+          title = "Scree plot from base::svd() results",
+          subtitle = "Each squared singular value divided by the sum total of all squared values",
+          x = "Number of singular values",
+          y = "% of variance explained"
+        ) +
+        ggplot2::scale_y_continuous(labels = scales::percent) +
+        ggplot2::scale_x_continuous(breaks = seq(
+          min(var_expl_text_df$singular_values),
+          max(var_expl_text_df),
+          1
+        )) +
+        ggplot2::theme_minimal())
     })
-    
-    
+
+
     ## ---- PCA Section using prcomp----
-    
-    # Output PCA Scores 
+
+    # Output PCA Scores
     PCAscores <- myPCA$x
-    
+
     output$PCAscores_tbl <- DT::renderDataTable({
       data_table_fun(
         df = PCAscores,
@@ -355,10 +364,10 @@ TAB3_SERVER <- function(input, output, session) {
         dp = 2
       )
     })
-    
-    # Output PCA Scores (that match the matrix abobe) 
+
+    # Output PCA Scores (that match the matrix abobe)
     PCAloadings <- myPCA$rotation
-    
+
     output$PCAloadings_tbl <- DT::renderDataTable({
       data_table_fun(
         df = PCAloadings,
@@ -368,39 +377,39 @@ TAB3_SERVER <- function(input, output, session) {
         dp = 2
       )
     })
-    
-    
+
+
     # PCA scree plot
     output$factoextra_scree <- shiny::renderPlot({
       shiny::isolate(
-                        factoextra::fviz_eig(myPCA, 
-                                             addlabels = TRUE, 
-                                             geom = "line",
-                                             ylim = c(0, 50)) +
-                          ggplot2::theme_minimal() +
-                          ggplot2::labs(title = "factoextra Scree plot")
+        factoextra::fviz_eig(myPCA,
+          addlabels = TRUE,
+          geom = "line",
+          ylim = c(0, 50)
+        ) +
+          ggplot2::theme_minimal() +
+          ggplot2::labs(title = "factoextra Scree plot")
       )
     })
-    
+
     # output the PCA biplot
     output$factoextra_biplot <- shiny::renderPlot({
       shiny::isolate(
-    factoextra::fviz_pca_biplot(myPCA, 
-                                repel = TRUE,
-                                col.var = "#2E9FDF", # Document colour
-                                col.ind = "#696969"  # Terms colour
-    )+
-      ggplot2::theme_minimal() +
-      ggplot2::labs(title = "factoextra Biplot of first two Principal Components")
-    
+        factoextra::fviz_pca_biplot(myPCA,
+          repel = TRUE,
+          col.var = "#2E9FDF", # Document colour
+          col.ind = "#696969" # Terms colour
+        ) +
+          ggplot2::theme_minimal() +
+          ggplot2::labs(title = "factoextra Biplot of first two Principal Components")
       )
     })
-    
+
     # output the eigen values
     eigenvalues_PCA <- myPCA$sdev^2
     eigenvalues_pca_df <- as.data.frame(eigenvalues_PCA)
     eigenvalues_pca_df <- base::t(eigenvalues_pca_df)
-    
+
     output$PCAeigen_tbl <- DT::renderDataTable({
       data_table_fun(
         df = eigenvalues_pca_df,
@@ -410,12 +419,9 @@ TAB3_SERVER <- function(input, output, session) {
         dp = 2
       )
     })
-    
-    
-    
-      })
-  
-  
+  })
+
+
   ## ---- user interface sidebar ----
 
 
@@ -436,7 +442,7 @@ TAB3_SERVER <- function(input, output, session) {
     table_v_text <- DT::dataTableOutput(outputId = "v_text_tbl")
     table_d_text <- DT::dataTableOutput(outputId = "d_text_tbl")
     table_reconstruct_mt_text_tbl <- DT::dataTableOutput(outputId = "reconstruct_mt_text_tbl")
-    
+
     # PCA
     table_tdm_scale <- DT::dataTableOutput(outputId = "tdm_scale_tbl")
     var_expl_text <- shiny::plotOutput(outputId = "var_explained_text", width = "500px", height = "300px")
@@ -449,45 +455,45 @@ TAB3_SERVER <- function(input, output, session) {
     table_d_text_scaled <- DT::dataTableOutput(outputId = "d_text_scaled_tbl")
     table_SVD_PCAscores <- DT::dataTableOutput(outputId = "SVD_PCAscores_tbl")
     table_SVD_eigen <- DT::dataTableOutput(outputId = "SVD_eigen_tbl")
-    
-    
+
+
     table_PCAloadings <- DT::dataTableOutput(outputId = "PCAloadings_tbl")
     table_PCAscores <- DT::dataTableOutput(outputId = "PCAscores_tbl")
     table_PCAeigen <- DT::dataTableOutput(outputId = "PCAeigen_tbl")
-    
-    
+
+
     SVD_PCAscores_plt <- shiny::plotOutput(outputId = "SVD_PCAscores_plot", width = "500px", height = "300px")
     SVD_PCAloadings_plt <- shiny::plotOutput(outputId = "SVD_PCAloadings_plot", width = "500px", height = "300px")
-    
-    
-    
-    
-            
+
+
+
+
+
     ui <- shiny::fluidPage(
       width = 12,
-      
+
       tags$h3("1 Select a set of documents then use the slider to control truncation of matrices"),
 
       shiny::wellPanel(
         shiny::fluidRow(
-          
-          column(6, boxPlus(
-            title = "SVD on text",
-            width = 12,
-            closable = TRUE,
-            enable_label = TRUE,
-            label_text = 1,
-            label_status = "info",
-            status = "info",
-            solidHeader = FALSE,
-            collapsible = TRUE,
-            p("Text documents can be turned into matrix of numbers and SVD applied too, in the same way as we have just
-            done for images. If we truncate then multiply the
-          three matricies created by SVD on a text matrix this can be used in Latent Semantic Analysis.
+          column(
+            6, boxPlus(
+              title = "SVD on text",
+              width = 12,
+              closable = TRUE,
+              enable_label = TRUE,
+              label_text = 1,
+              label_status = "info",
+              status = "info",
+              solidHeader = FALSE,
+              collapsible = TRUE,
+              p("We can also apply SVD to documents if we convert them into a matrix that counts the words. 
+              If we apply SVD to a matrix of word counts in documents, then truncate and multiply the
+          three matrices SVD creates, this is known as Latent Semantic Analysis.
             'Latent' means hidden, 'Semantic' is meaning (i.e. hidden meaning analysis). In LSA, a document is given 
-            some of the information value from words not inside a document, if other words in the document are found 
+            some information value from words not inside a document, if other words in that document are found 
             within documents that are similar.")
-          ),
+            ),
             # select your text
             shiny::selectInput("select_text",
               label = "Select text",
@@ -496,12 +502,10 @@ TAB3_SERVER <- function(input, output, session) {
                 "Gold Silver Truck" = 2
               ),
               selected = 1
-            )),
+            )
+          ),
 
-            column(6,table_txt)
-          
-
-          
+          column(6, table_txt)
         ),
 
         shiny::fluidRow(
@@ -511,7 +515,7 @@ TAB3_SERVER <- function(input, output, session) {
             6,
             table_reconstruct_mt_text_tbl,
 
-            # 
+            #
             shiny::sliderInput(
               inputId = "values_text",
               label = "Select level of matrix truncation:",
@@ -537,11 +541,11 @@ TAB3_SERVER <- function(input, output, session) {
             status = "info",
             solidHeader = FALSE,
             collapsible = TRUE,
-            p("This table of text documents is turned into the Term Document Matrix (TDM) next to it. The TDM simply counts
-             the number of times each word appears in each document. The phrase term is used instead of word as the matrix
-             could be of every word pair (called bigrams) or any higher numbers of word sequences that are 
-             generically called ngrams. Stop words that occur in most 
-              most documents are excluded before the TDM is created (e.g. 'and' or 'the').")
+            p("We convert the documents into the blue Term Document Matrix (TDM) above. The TDM simply counts
+             the number of times each word appears in each document. We say term instead of word as a matrix
+             could also be created for every word pair (called bigrams), or any number of word sequences (known as ngrams). 'Stop' words that occur in most 
+              documents are excluded before the TDM is created (e.g. 'and' or 'the') as they offer little discriminantory 
+              value for tasks such as text search or document clustering.")
           )),
 
 
@@ -556,21 +560,21 @@ TAB3_SERVER <- function(input, output, session) {
             status = "info",
             solidHeader = FALSE,
             collapsible = TRUE,
-            p("SVD has decomposed the TDM above into the U, D and V matricies below.
-           The de-composed matrices are truncated by the slider before being multiplied together to create the matrix above.
+            p("SVD has decomposed the blue TDM into the green U, D and V matrices below.
+           The de-composed matrices are truncated by the slider before being multiplied together to create the orange matrix above.
            Notice how some words (or terms) that don't appear in documents do have a value after the truncated SVD is applied. 
-           For example, in the 'Memos' documents, look at the value for the word 'trees' in document m4. When
-             2 singular values are chosen in the slider, 'trees' has the value 0.66 in the matrix above from the truncated SVD. 
-             But when you look at 'trees' in the original TDM, the value is zero. So SVD has made the term 'trees' 
+           For example, in the 'Memos' documents, look at the value for the word 'trees' in document m4 in the blue TDM. When the value
+             2 is chosen in the slider, 'trees' is given the value 0.66 in the orange matrix above from the truncated SVD. 
+             But when you look at 'trees' in the original blue TDM, the value is zero. So SVD has made the term 'trees' 
              available for text search or 
              text classification, even though 'trees' does not appear in document m4. However, note that 'trees' does  
-             appear in similar documents that share other words (i.e. documents m1, m2 and m3.")
+             appear in similar documents that share other words (i.e. documents m1, m2 and m3).")
           ))
         )
       ),
-      
+
       tags$h3("2 The three matrices from SVD that when truncated and multiplied perform LSA"),
-      
+
       shiny::wellPanel(
         shiny::fluidRow(
           column(4, table_u_text),
@@ -579,11 +583,11 @@ TAB3_SERVER <- function(input, output, session) {
         ),
 
         shiny::br(),
-        
+
 
         shiny::fluidRow(
           column(12, boxPlus(
-            title = "TDM decomposed by SVD into U, D, and V matricies and truncated by slider",
+            title = "TDM decomposed by SVD into U, D, and V matrices and truncated by slider",
             width = 12,
             closable = TRUE,
             enable_label = TRUE,
@@ -592,70 +596,71 @@ TAB3_SERVER <- function(input, output, session) {
             status = "info",
             solidHeader = FALSE,
             collapsible = TRUE,
-            p("These are the U, D and V matricies created from the Singular Value Decompostion of the TDM.
+            p("These are the green U, D and V matrices created from the Singular Value Decomposition of the blue TDM.
          Each matrix is truncated by the number selected in the slider. 
          The U matrix (of left singular vectors) has the right most columns truncated.
-         The V matrix (of right singular vectors) has the botttom most rows truncated.
+         The V matrix (of right singular vectors) has the bottom most rows truncated.
          The square D matrix (diagonal of singular values) has the right most columns truncated and remains 
          a square as the rows with only zeros in are also removed. 
          Try setting the slider
-      to the maximum number of values. When the full non-truncated matricies are
-        multiplied, the matrix values above are identical to the orginal TDM. This demonstrates that the U, D and V
+      to the maximum number of values. When the full non-truncated matrices are
+        multiplied, the matrix values in orange above are identical to the original blue TDM. This demonstrates that the U, D and V
         matrices contain all the information in the original TDM, just like in the image SVD example.")
           ))
         )
       ),
-      
+
       tags$h3("3 SVD is also underlies Principal Components Analysis"),
-      
+
       shiny::wellPanel(
-        
         shiny::fluidRow(
-          column(6, 
-                 table_tdm_scale),
-                 
-          column(6, boxPlus(
-            title = "Using SVD to peform PCA",
-            width = 12,
-            closable = TRUE,
-            enable_label = TRUE,
-            label_text = 5,
-            label_status = "info",
-            status = "info",
-            solidHeader = FALSE,
-            collapsible = TRUE,
-            p("SVD is the method underyling Principal Components Analysis.
+          column(
+            6,
+            table_tdm_scale
+          ),
+
+          column(
+            6, boxPlus(
+              title = "Using SVD to peform PCA",
+              width = 12,
+              closable = TRUE,
+              enable_label = TRUE,
+              label_text = 5,
+              label_status = "info",
+              status = "info",
+              solidHeader = FALSE,
+              collapsible = TRUE,
+              p("SVD is the method underlying Principal Components Analysis.
             A common first step in PCA is to centre and scale the matrix. 
             It is typically carried out if the columns contain 
             units on different scales and we don't want some columns to dominate others. Using the options below, you can carry out the SVD
               with and without this adjustment  and see the impact.
             Centering and scaling is carried out here with the base R function base::scale(x,centre = TRUE, scale = TRUE).
-            What this will do is, for each term count in each colum, the column mean is subtracted and then divided by the column standard deviation.
+            What this will do is, for each term count in each column, the column mean is subtracted and then divided by the column standard deviation.
               Each column will now have a mean of zero and a standard deviation of one.")
-          ),
-          
-          shiny::radioButtons("radio", label = "Centre and Scale Term Document Matrix?",
-                              choices = list("Centre & scale" = 1, "Do not centre or scale" = 2), 
-                              inline = TRUE,
-                              selected = 2)
-          
-          ))
-        
+            ),
+
+            shiny::radioButtons("radio",
+              label = "Centre and Scale Term Document Matrix?",
+              choices = list("Centre & scale" = 1, "Do not centre or scale" = 2),
+              inline = TRUE,
+              selected = 2
+            )
+          )
+        )
       ),
-      
+
       tags$h3("4 Create both a PCA Scree plot and PCA eigenvalues from the SVD Diagonal matrix of singular values"),
-      
+
       shiny::wellPanel(
-        
         shiny::fluidRow(
-          
           column(6, table_d_text_scaled),
-          column(6,var_expl_text)),
-        
+          column(6, var_expl_text)
+        ),
+
         shiny::br(),
-        
+
         shiny::fluidRow(
-        
           column(12, boxPlus(
             title = "Variance explained",
             width = 12,
@@ -674,25 +679,23 @@ TAB3_SERVER <- function(input, output, session) {
               in the matrix.")
           ))
         ),
-        
+
         shiny::fluidRow(
-          
-        
-        column(6,table_SVD_eigen),
-        
-        
-        
-        column(6, boxPlus(
-          title = "Eigenvalues from SVD",
-          width = 12,
-          closable = TRUE,
-          enable_label = TRUE,
-          label_text = 7,
-          label_status = "info",
-          status = "info",
-          solidHeader = FALSE,
-          collapsible = TRUE,
-          p("We can also convert the singular values from the diagonal matrxi of the SVD into the
+          column(6, table_SVD_eigen),
+
+
+
+          column(6, boxPlus(
+            title = "Eigenvalues from SVD",
+            width = 12,
+            closable = TRUE,
+            enable_label = TRUE,
+            label_text = 7,
+            label_status = "info",
+            status = "info",
+            solidHeader = FALSE,
+            collapsible = TRUE,
+            p("We can also convert the singular values from the diagonal matrix of the SVD into the
           eigenvalues reported in PCA. Eigenvalues measure the amount of variation 
             retained by each principal component. The first Principal Component
             finds the direction with the maximum amount of variation in the data set.
@@ -704,113 +707,102 @@ TAB3_SERVER <- function(input, output, session) {
             To convert the D matrix singular values from SVD to PCA eigenvalues, each value is squared 
             then divided by the sample variance (which is the number of terms minus one).
             ")
-        ))
-        
+          ))
         )
-        ),
-        
-      
+      ),
+
+
       tags$h3("5 Visualise PCA Loadings with the SVD V matrix"),
-      
+
       shiny::wellPanel(
-          
-          
         shiny::fluidRow(
-          
           column(6, table_v_text_scaled),
           column(6, SVD_PCAloadings_plt)
         ),
-        
+
         shiny::br(),
-        
-        shiny::fluidRow( 
-        
-        column(12, boxPlus(
-          title = "PCA Loadings",
-          width = 12,
-          closable = TRUE,
-          enable_label = TRUE,
-          label_text = 7,
-          label_status = "info",
-          status = "info",
-          solidHeader = FALSE,
-          collapsible = TRUE,
-          p("The PCA loadings are taken from the V matrix. Typically in PCA the first 
-            two columns of the V matrix (the first two principal componensts) are potted. 
+
+        shiny::fluidRow(
+          column(12, boxPlus(
+            title = "PCA Loadings",
+            width = 12,
+            closable = TRUE,
+            enable_label = TRUE,
+            label_text = 7,
+            label_status = "info",
+            status = "info",
+            solidHeader = FALSE,
+            collapsible = TRUE,
+            p("The PCA loadings are taken from the V matrix. Typically in PCA the first 
+            two columns of the V matrix (the first two principal components) are plotted. 
             THe first column is on the x-axis and
             the second column on the y-axis. 
             The arrows point in the direction of increasing values for each original document. 
             Arrows that are close show that two documents are highly correlated.
             For the 'Memos' text, note how effective these two columns
-            are at clustering documents with the same words in this 2 dimensional space. For example,
+            are at clustering documents with the same words in this 2-dimensional space. For example,
             documents C2 and C5 are the only documents that include the words 'response' and 'time' and so 
             are close to each other in the PCA loadings plot.")
-        ))
+          ))
         )
-        
-        ),
-        
-      tags$h3("6 Create PCA Scores from SVD matrices U x D"),
-      
-      shiny::wellPanel(
-        
-        
-        shiny::fluidRow(
-        column(3, table_u_text_scaled),  
-        column(3,table_SVD_PCAscores),
-        column(6,SVD_PCAscores_plt),
-        
-        shiny::br(),
-        shiny::br(),
-        
-        
-        shiny::fluidRow(
-        
-        column(12, boxPlus(
-          title = "PCA Scores",
-          width = 12,
-          closable = TRUE,
-          enable_label = TRUE,
-          label_text = 8,
-          label_status = "info",
-          status = "info",
-          solidHeader = FALSE,
-          collapsible = TRUE,
-          p("PCA scores come from the multiplication of the U and D matrices. A typical PCA plot is the first of the values
-            in the first two columns. These are the first two principal components. So this is the values of the
-            orginal TDM but re-orientd or rotated onto our two new axes.")
-        ))
-        )
-        )
-        
       ),
-      
-      
-      tags$h3("7 Create the identical PCA output to SVD using the R PCA function stats::prcomp()"),
-      
+
+      tags$h3("6 Create PCA Scores from SVD matrices U x D"),
+
       shiny::wellPanel(
-        
+        shiny::fluidRow(
+          column(3, table_u_text_scaled),
+          column(3, table_SVD_PCAscores),
+          column(6, SVD_PCAscores_plt),
+
+          shiny::br(),
+          shiny::br(),
+
+
+          shiny::fluidRow(
+            column(12, boxPlus(
+              title = "PCA Scores",
+              width = 12,
+              closable = TRUE,
+              enable_label = TRUE,
+              label_text = 8,
+              label_status = "info",
+              status = "info",
+              solidHeader = FALSE,
+              collapsible = TRUE,
+              p("PCA scores come from the multiplication of the U and D matrices. A typical PCA plot is the first of the values
+            in the first two columns. These are the first two principal components. So this is the values of the
+            original TDM but re-oriented or rotated onto our two new axes.")
+            ))
+          )
+        )
+      ),
+
+
+      tags$h3("7 Create the identical PCA output to SVD using the R PCA function stats::prcomp()"),
+
+      shiny::wellPanel(
         shiny::fluidRow(
           column(3, table_PCAscores),
-          column(3,table_PCAloadings),
-          column(6,factoextra_biplot_plt)),
-        
-        
+          column(3, table_PCAloadings),
+          column(6, factoextra_biplot_plt)
+        ),
+
+
         shiny::fluidRow(
-          
-        column(6, factoextra_scree_plt),
-        
-        column(6, boxPlus(
-          title = "PCA using stats::prcomp",
-          width = 12,
-          closable = TRUE,
-          enable_label = TRUE,
-          label_text = 9,
-          label_status = "info",
-          status = "info",
-          solidHeader = FALSE,
-          collapsible = TRUE,
-          p("To demonstrate that we have entirely re-created a Principal Components Analysis
+          column(6, factoextra_scree_plt),
+
+          column(6, boxPlus(
+            title = "PCA using stats::prcomp",
+            width = 12,
+            closable = TRUE,
+            enable_label = TRUE,
+            label_text = 9,
+            label_status = "info",
+            status = "info",
+            solidHeader = FALSE,
+            collapsible = TRUE,
+            p("To demonstrate that we have entirely re-created a Principal Components Analysis
             with SVD, here we simply use the R function stats::prcomp() on the TDM.
             From the list of objects prcomp creates we can view here both the PCA scores and 
             PCA loadings in tables. And use the excellent factoextra::fviz_pca_biplot function to create
@@ -818,22 +810,13 @@ TAB3_SERVER <- function(input, output, session) {
             the scree plot, and squaring sdev to create the eigenvalues (or use the function 
             factoextra::get_eigenvalue()).
             ")
-        ))
-        
-        
+          ))
         ),
-        
+
         shiny::fluidRow(
-          
-          
-          column(6,table_PCAeigen)
-          
-          
+          column(6, table_PCAeigen)
         )
       )
-      
-      
-      
     )
 
     return(ui)

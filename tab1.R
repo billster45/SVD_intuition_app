@@ -21,7 +21,7 @@ TAB1_SERVER <- function(input, output, session) {
 
           tags$ul(
             tags$li(p(
-              "Singular Value Decomposition (SVD) is a powerful data analysis technique with many uses. It inludes data dimension reduction 
+              "Singular Value Decomposition (SVD) is a powerful data analysis technique with many uses. It includes data dimension reduction 
           prior to Machine Learning (using",
               shiny::a("Principal Components Analysis",
                 href = "https://towardsdatascience.com/dimensionality-reduction-does-pca-really-improve-classification-outcome-6e9ba21f0a32",
@@ -112,26 +112,23 @@ TAB1_SERVER <- function(input, output, session) {
                 href = "https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab",
                 target = "_blank"
               ), ". And for a fantastic intuitive explanation of how Principal Components analysis works try, ",
-              
+
               shiny::a("Principal Component Analysis in 6 steps",
-                       href = "https://coolstatsblog.com/2015/03/21/principal-component-analysis-explained/",
-                       target = "_blank"
+                href = "https://coolstatsblog.com/2015/03/21/principal-component-analysis-explained/",
+                target = "_blank"
               )
-              
-            )
-            
-            )
+            ))
           ),
 
           tags$h3("Why, when all singular vectors are selected, is the non-compressed image not identical to the original?"),
 
           tags$ul(
             tags$li(p(
-              "Selecting the maximum number in the slider does not exactly re-create the original image matrix and the image can look darker then the original. 
+              "Selecting the maximum number in the slider does not exactly re-create the original image matrix and the image can look darker than the original. 
             This is because, before applying 
                       SVD, the app has first scaled the matrix by subtracting the column mean and dividing each column by its standard deviation 
                       using base::scale(). Therefore, if you select the
-                      maximum number of vectors in the slider this re-creates the original uncomopressed image but only after this scaling. Scaling is a ",
+                      maximum number of vectors in the slider this re-creates the original uncompressed image but only after this scaling. Scaling is a ",
               shiny::a("recommended step in Principal Components analysis",
                 href = "https://www.theanalysisfactor.com/tips-principal-component-analysis/",
                 target = "_blank"
@@ -178,7 +175,7 @@ TAB1_SERVER <- function(input, output, session) {
 
             tags$li(p(
               "The book image is by, ",
-              shiny::a("Suzy Hazelwookd on Pexels.com",
+              shiny::a("Suzy Hazelwood on Pexels.com",
                 href = "https://www.pexels.com/photo/low-light-photography-of-books-1301585/",
                 target = "_blank"
               ), "."
@@ -192,6 +189,17 @@ TAB1_SERVER <- function(input, output, session) {
               ), "."
             )),
 
+            
+            tags$li(p(
+              "Understanding how the output of the R function base::svd() can be converted into the same
+              output as the R function for PCA, stats::prcomp(), is well explained in the HarvardX Biomedical 
+              Data Science Open Online Training unit, ",
+              shiny::a("Running PCA and SVD in R",
+                       href = "https://genomicsclass.github.io/book/pages/pca_svd.html",
+                       target = "_blank"
+              ), "."
+            )),
+            
             tags$li(p(
               "The 'memos' text LSA example is from the ",
               shiny::a("Introduction to Latent Semantic Analysis",

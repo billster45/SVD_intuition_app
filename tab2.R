@@ -59,9 +59,7 @@ TAB2_SERVER <- function(input, output, session) {
 
 
   # Runs based on the image selected
-  shiny::observeEvent(c(input$select_image,input$radio_image)
-                      , {
-
+  shiny::observeEvent(c(input$select_image, input$radio_image), {
     if (input$select_image == 1) {
       image <- img()
     } else if (input$select_image == 2) {
@@ -75,14 +73,14 @@ TAB2_SERVER <- function(input, output, session) {
       graphics::plot(image, axes = FALSE, main = "Original image")
     })
 
-    # scale image matrix if chosen by raiod
+    # scale image matrix if chosen by radio button
     if (input$radio_image == 1) {
       image_scaled <- image
     } else if (input$radio_image == 2) {
       image_scaled <- base::scale(image)
       image_scaled[is.nan(image_scaled)] <- 0
     }
-    
+
     # Decompose orginal image with SVD
     SVD <- base::svd(image_scaled)
 
@@ -101,6 +99,7 @@ TAB2_SERVER <- function(input, output, session) {
       y = var_expl_df$var_expl
     )
 
+    # output the knee value as info box
     output$kneeBox <- shinydashboard::renderValueBox({
       shinydashboard::valueBox(
         knee, "...the number of singular values at the 'knee' of this variance explained plot",
@@ -111,8 +110,10 @@ TAB2_SERVER <- function(input, output, session) {
       )
     })
 
+    # set the slider to be the knee value
     shiny::updateSliderInput(session, "values", value = knee)
 
+    # output the variance explained plot
     output$var_explained <- shiny::renderPlot({
       shiny::isolate(var_expl_df %>%
         ggplot2::ggplot() +
@@ -142,7 +143,7 @@ TAB2_SERVER <- function(input, output, session) {
         theme(zoom.y = element_blank(), validate = FALSE))
     })
 
-    # Convert the original image to a matrix and output as a table
+    # Convert the original image to a matrix and output as a table in blue
     image_mt <- image %>%
       as.matrix()
 
@@ -157,7 +158,7 @@ TAB2_SERVER <- function(input, output, session) {
     })
   })
 
-  # values change
+  # Update the following with any user changes to these settings
   shiny::observeEvent(c(
     input$values,
     input$select_image,
@@ -172,33 +173,35 @@ TAB2_SERVER <- function(input, output, session) {
       image <- grey_boat
     }
 
-    # sacle image matrix if chosen by raiod
+    # sacle image matrix if chosen by radio button
     if (input$radio_image == 1) {
       image_scaled <- image
     } else if (input$radio_image == 2) {
       image_scaled <- base::scale(image)
       image_scaled[is.nan(image_scaled)] <- 0
     }
-    
+
     # Decompose orginal image with SVD
     SVD <- base::svd(image_scaled)
 
     # Find the maximum number of columns in the matrix for the slider and update it
     shiny::updateSliderInput(session, "values", max = ncol(SVD$u))
 
+    # this truncates the decomposed matrices U, D and V by the value in the slider
     u <- SVD$u[, 1:input$values]
     d <- base::diag(SVD$d[1:input$values]) # placing values on the diagonal
     v <- base::t(SVD$v[, 1:input$values]) # transpose the matrix (swap rows with columns)
 
+    # multiply the truncated matrices into the compressed image
     reconstruct_mt <- u %*% d %*% v
 
-    # Output the compressed matrix
+    # Output the compressed matrix as yellows?
     output$reconstruct_mt_tbl <- DT::renderDataTable({
       data_table_fun(
         df = reconstruct_mt,
         table_title = paste("Matrix of compressed image (U x D x V): ", nrow(reconstruct_mt), " rows and ", ncol(reconstruct_mt), " columns"),
 
-        colours = "Blues",
+        colours = "Oranges",
         font_perc = "80%",
         dp = 2
       )
@@ -272,7 +275,7 @@ TAB2_SERVER <- function(input, output, session) {
 
     ui <- shiny::fluidPage(
       width = 12,
-      
+
       tags$h3("1 Select an image and compress with the slider"),
 
       shiny::wellPanel(
@@ -316,19 +319,18 @@ TAB2_SERVER <- function(input, output, session) {
               value = 2,
               step = 1
             ),
-            
-            shiny::radioButtons("radio_image", label = "Centre and Scale Image Matrix?",
-                                choices = list("Do not centre or scale" = 1,"Centre & scale" = 2 ), 
-                                inline = TRUE,
-                                selected = 1)
+
+            shiny::radioButtons("radio_image",
+              label = "Centre and scale image matrix?",
+              choices = list("Do not centre or scale" = 1, "Centre & scale" = 2),
+              inline = TRUE,
+              selected = 1
+            )
           )
         )
-        
       ),
-      
+
       shiny::wellPanel(
-        
-        
         shiny::fluidRow(
           column(
             6,
@@ -359,9 +361,11 @@ TAB2_SERVER <- function(input, output, session) {
               status = "info",
               solidHeader = FALSE,
               collapsible = TRUE,
-              p("This is the matrix of numbers that is used to plot the original image 
-                   above. Using the slider we manipulate this matrix with Singular Value Decomposition (SVD)
-                   to create a new matrix. When plotted, the image is compressed and can be seen top right.")
+              p("The blue table is the matrix of numbers used to plot the original image 
+                above. Using the slider, we manipulate this matrix with Singular Value Decomposition (SVD)
+                to create three new matrices in green. If we truncate and multiply together the three green 
+                matrices, this creates the orange matrix below that has less information. However, the most important 
+                information is kept.  The new orange matrix is plotted as the compressed image on the top right.")
             )
           ),
 
@@ -378,15 +382,15 @@ TAB2_SERVER <- function(input, output, session) {
               solidHeader = FALSE,
               collapsible = TRUE,
               p(" 
-                          This 'scree' plot just above shows what percentage of variance in the original matrix is 
-                          explained by the number of singular values selected from the Diagonal matrix. The 'knee' is the 
+                          The 'scree' plot above tells us what percentage of variance in the original blue matrix is 
+                          explained by the number of singular values selected from the green Diagonal matrix. The 'knee' is the 
                           number of values from where the amount of additional 
-                          variance explained will tail off rapidly if more values are selected.")
+                          variance explained tails off rapidly if more values are selected.")
             )
           )
         )
       ),
-      
+
       tags$h3("2 The original matrix de-composed by SVD into U, D and V and then truncated"),
 
       shiny::wellPanel(
@@ -400,7 +404,7 @@ TAB2_SERVER <- function(input, output, session) {
           column(
             12,
             boxPlus(
-              title = "Original image matrix is decomposed by SVD into U, D, and V matricies that are truncated by the slider",
+              title = "Original image matrix is decomposed by SVD into U, D, and V matrices that are truncated by the slider",
               closable = TRUE,
               width = 12,
               enable_label = TRUE,
@@ -409,19 +413,20 @@ TAB2_SERVER <- function(input, output, session) {
               status = "info",
               solidHeader = FALSE,
               collapsible = TRUE,
-              p("The R function base::svd() decomposes the matrix of the original image into these 
-               three matricies: U, D, and V. The number selected in the slider truncates each matrix before 
-               they are multiplied together to create the matrix below of the compressed image. If you select the maximum number
-                in the slider then there is no truncation and the original image will be exactly re-created. 
-                This demonstrates that SVD factors the original maatrix
-                into U, D and V with no loss of information. The slider truncates the right most columns of the 
-                U matrix (called the left singular vectors), the bottom rows of the V matrix, and the right most values of the 
+              p("The R function base::svd() decomposes the blue matrix of the original image into these 
+               three green matrices: U, D, and V. The number selected in the slider truncates each matrix. 
+               The truncated matrices are multiplied together to create the orange matrix below of the compressed image. 
+               If you select the maximum number
+                in the slider there will be no truncation, the original image will be re-created exactly. 
+                This demonstrates that SVD factors the original blue matrix
+                into the green U, D and V with no loss of information. The slider truncates the right-most columns of the 
+                U matrix (called the left singular vectors), the bottom rows of the V matrix, and the right-most values of the 
                 D matrix (called singular values).")
             )
           )
         )
       ),
-      
+
       tags$h3("3 The compressed matrix (U x V x D)."),
 
       shiny::wellPanel(
@@ -432,7 +437,7 @@ TAB2_SERVER <- function(input, output, session) {
             table_reconstruct_mt,
 
             boxPlus(
-              title = "Truncated U, D and V matricies when multiplied together to create the compressed image matrix",
+              title = "Truncated U, D and V matrices when multiplied together to create the compressed image matrix",
               closable = TRUE,
               width = 12,
               enable_label = TRUE,
@@ -441,10 +446,10 @@ TAB2_SERVER <- function(input, output, session) {
               status = "info",
               solidHeader = FALSE,
               collapsible = TRUE,
-              p("The three truncated U, D and V matricies above have been trunctad by the slider then multiplied together to 
-                 create this matrix. This is the matrix that is used to plot the compressed image above. Note that when selecting the
-                maximum number in the slider, and the option to 'Centre and Scale' is chosen (top-right),
-                the image will look darker then the original because of the change to the original image matrix from this transformation.")
+              p("The green U, D and V matrices above truncated by the slider are multiplied together to 
+                 create this orange matrix. This matrix is used to plot the compressed image above. Note that when selecting the
+                maximum number in the slider, and the option to 'Centre and Scale' is chosen,
+                the image will look darker than the original because of the change to the original image matrix from this transformation.")
             )
           )
         )
