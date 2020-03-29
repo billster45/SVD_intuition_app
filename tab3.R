@@ -219,8 +219,6 @@ TAB3_SERVER <- function(input, output, session) {
       )
     })
 
-
-
     # U x V to create SVD PCA Scores equivalent
     SVD_PCAscores <- SVD_text_scaled$u %*% base::diag(SVD_text_scaled$d)
     rownames(SVD_PCAscores) <- rownames(tdm)
@@ -263,12 +261,20 @@ TAB3_SERVER <- function(input, output, session) {
       )
     })
 
-    # loadings ggplot
+    # principal axes,directions or eigenvectors plot
+    # https://stats.stackexchange.com/a/141531
     SVD_PCAloadings <- SVD_text_scaled$v[, 1:2]
     rownames(SVD_PCAloadings) <- colnames(tdm)
     SVD_PCAloadings <- SVD_PCAloadings %>%
       as.data.frame() %>%
-      dplyr::mutate(docs = rownames(SVD_PCAloadings))
+      dplyr::mutate(docs = rownames(SVD_PCAloadings)
+                    #V1 = scales::rescale(V1, to=c(-1,1)), #https://stats.stackexchange.com/questions/104306/what-is-the-difference-between-loadings-and-correlation-loadings-in-pca-and
+                    #V2 = scales::rescale(V2, to=c(-1,1))
+                    #V1 = scale(V1),
+                    #V2 = scale(V2)
+              )
+    
+    
 
     output$SVD_PCAloadings_plot <- shiny::renderPlot({
       shiny::isolate(
@@ -292,6 +298,9 @@ TAB3_SERVER <- function(input, output, session) {
             xintercept = 0,
             linetype = 2
           ) +
+          # ggplot2::coord_fixed(ratio=1) +
+          # ggplot2::ylim(-1,1) +
+          # ggplot2::xlim(-1,1) +
           ggplot2::theme_minimal() +
           ggplot2::geom_segment(aes(x = 0, y = 0, xend = V1, yend = V2),
             arrow = arrow(
@@ -301,7 +310,7 @@ TAB3_SERVER <- function(input, output, session) {
             colour = "#3F9DAB"
           ) +
           ggplot2::labs(
-            title = "PCA Loadings for each Document",
+            title = "PCA Eigenvectors (or principle axes/directions) for each Document",
             subtitle = "The scores in the first and second columns of the V matrix"
           )
       )
@@ -490,9 +499,8 @@ TAB3_SERVER <- function(input, output, session) {
               p("We can also apply SVD to documents if we convert them into a matrix that counts the words. 
               If we apply SVD to a matrix of word counts in documents, then truncate and multiply the
           three matrices SVD creates, this is known as Latent Semantic Analysis.
-            'Latent' means hidden, 'Semantic' is meaning (i.e. hidden meaning analysis). In LSA, a document is given 
-            some information value from words not inside a document, if other words in that document are found 
-            within documents that are similar.")
+            'Latent' means hidden, 'Semantic' is meaning (i.e. hidden meaning analysis). In LSA, a word not in a document is given 
+            some information value if that word occurs in other document that are similar (i.e. it shares other words with other documents).")
             ),
             # select your text
             shiny::selectInput("select_text",
@@ -633,10 +641,9 @@ TAB3_SERVER <- function(input, output, session) {
               p("SVD is the method underlying Principal Components Analysis.
             A common first step in PCA is to centre and scale the matrix. 
             It is typically carried out if the columns contain 
-            units on different scales and we don't want some columns to dominate others. Using the options below, you can carry out the SVD
-              with and without this adjustment  and see the impact.
-            Centering and scaling is carried out here with the base R function base::scale(x,centre = TRUE, scale = TRUE).
-            What this will do is, for each term count in each column, the column mean is subtracted and then divided by the column standard deviation.
+            units on different scales and we don't want some columns to dominate others in the analysis. 
+            Use the options below to run PCA with or without this adjustment  and see the impact.
+            We use base R function base::scale(). For each term count in each column, the column mean is subtracted then divided by the column standard deviation.
               Each column will now have a mean of zero and a standard deviation of one.")
             ),
 
@@ -644,7 +651,7 @@ TAB3_SERVER <- function(input, output, session) {
               label = "Centre and Scale Term Document Matrix?",
               choices = list("Centre & scale" = 1, "Do not centre or scale" = 2),
               inline = TRUE,
-              selected = 2
+              selected = 1
             )
           )
         )
@@ -672,11 +679,11 @@ TAB3_SERVER <- function(input, output, session) {
             solidHeader = FALSE,
             collapsible = TRUE,
             p("After applying the R function base::svd() to the TDM, the resulting diagonal matrix
-              of singular values can be used to describe the variance explained by each singular value. 
+              of singular values can describe the variance explained. 
               The values in the Scree plot 
               are each singular value in the diagonal matrix from left to right, squared, 
               and divided by the sum total of all the squared values
-              in the matrix.")
+              in the diagonal matrix.")
           ))
         ),
 
@@ -699,20 +706,19 @@ TAB3_SERVER <- function(input, output, session) {
           eigenvalues reported in PCA. Eigenvalues measure the amount of variation 
             retained by each principal component. The first Principal Component
             finds the direction with the maximum amount of variation in the data set.
-            So in the language of a truncated SVD, the eigenvalues can be used to show us what number of 
+            So in the language of a truncated SVD, the eigenvalues can be used to show what number of 
             singular vectors can be kept to explain most of the variance in the matrix.
             
-            In PCA, the eigenvalues are the squared standard deviations returned by 
-            the R function stats::prcomp(). 
-            To convert the D matrix singular values from SVD to PCA eigenvalues, each value is squared 
-            then divided by the sample variance (which is the number of terms minus one).
+            When using the R function stats::prcomp() for PCA, the eigenvalues are the standard deviations it returns squared.
+            To convert the D diagonal matrix singular values from SVD to PCA eigenvalues, square each value and divide
+            by the sample variance (the number of terms minus one).
             ")
           ))
         )
       ),
 
 
-      tags$h3("5 Visualise PCA Loadings with the SVD V matrix"),
+      tags$h3("5 Visualise PCA Eigenvectors using the SVD V matrix"),
 
       shiny::wellPanel(
         shiny::fluidRow(
@@ -724,25 +730,24 @@ TAB3_SERVER <- function(input, output, session) {
 
         shiny::fluidRow(
           column(12, boxPlus(
-            title = "PCA Loadings",
+            title = "PCA Eigenvectors",
             width = 12,
             closable = TRUE,
             enable_label = TRUE,
-            label_text = 7,
+            label_text = 8,
             label_status = "info",
             status = "info",
             solidHeader = FALSE,
             collapsible = TRUE,
-            p("The PCA loadings are taken from the V matrix. Typically in PCA the first 
-            two columns of the V matrix (the first two principal components) are plotted. 
-            THe first column is on the x-axis and
-            the second column on the y-axis. 
+            p("The PCA Eigenvectors are taken from the V matrix. We can plot the first 
+            two columns of the V matrix on the x-axis and y-axis respectively. 
             The arrows point in the direction of increasing values for each original document. 
-            Arrows that are close show that two documents are highly correlated.
+            Arrows that are close show that two documents are highly correlated. 
+            Negatively correlated documents are on opposite sides of the plot.
             For the 'Memos' text, note how effective these two columns
             are at clustering documents with the same words in this 2-dimensional space. For example,
             documents C2 and C5 are the only documents that include the words 'response' and 'time' and so 
-            are close to each other in the PCA loadings plot.")
+            are close to each other in the plot.")
           ))
         )
       ),
@@ -765,7 +770,7 @@ TAB3_SERVER <- function(input, output, session) {
               width = 12,
               closable = TRUE,
               enable_label = TRUE,
-              label_text = 8,
+              label_text = 9,
               label_status = "info",
               status = "info",
               solidHeader = FALSE,
@@ -797,7 +802,7 @@ TAB3_SERVER <- function(input, output, session) {
             width = 12,
             closable = TRUE,
             enable_label = TRUE,
-            label_text = 9,
+            label_text = 10,
             label_status = "info",
             status = "info",
             solidHeader = FALSE,
