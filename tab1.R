@@ -200,7 +200,18 @@ TAB1_SERVER <- function(input, output, session) {
               ), "."
             )),
             
+
             tags$li(p(
+              "Biplots in PCA can be created in many different ways. I found this statsexchange answer helpful that
+              is a reply to the question, ",
+              shiny::a("Positioning the arrows on a PCA biplot",
+                       href = "https://stats.stackexchange.com/a/141531",
+                       target = "_blank"
+              ), "."
+            )),
+            
+            
+                        tags$li(p(
               "The 'memos' text LSA example is from the ",
               shiny::a("Introduction to Latent Semantic Analysis",
                 href = "http://lsa.colorado.edu/papers/dp1.LSAintro.pdf",

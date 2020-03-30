@@ -219,7 +219,7 @@ TAB3_SERVER <- function(input, output, session) {
       )
     })
 
-    # U x V to create SVD PCA Scores equivalent
+    # U x V to create SVD PCA Scores (or x) equivalent
     SVD_PCAscores <- SVD_text_scaled$u %*% base::diag(SVD_text_scaled$d)
     rownames(SVD_PCAscores) <- rownames(tdm)
 
@@ -265,18 +265,12 @@ TAB3_SERVER <- function(input, output, session) {
     # https://stats.stackexchange.com/a/141531
     SVD_PCAloadings <- SVD_text_scaled$v[, 1:2]
     rownames(SVD_PCAloadings) <- colnames(tdm)
+    
     SVD_PCAloadings <- SVD_PCAloadings %>%
       as.data.frame() %>%
-      dplyr::mutate(docs = rownames(SVD_PCAloadings)
-                    #V1 = scales::rescale(V1, to=c(-1,1)), #https://stats.stackexchange.com/questions/104306/what-is-the-difference-between-loadings-and-correlation-loadings-in-pca-and
-                    #V2 = scales::rescale(V2, to=c(-1,1))
-                    #V1 = scale(V1),
-                    #V2 = scale(V2)
-              )
+      dplyr::mutate(docs = rownames(SVD_PCAloadings))
     
-    
-
-    output$SVD_PCAloadings_plot <- shiny::renderPlot({
+      output$SVD_PCAloadings_plot <- shiny::renderPlot({
       shiny::isolate(
         SVD_PCAloadings %>%
           ggplot2::ggplot() +
@@ -316,10 +310,7 @@ TAB3_SERVER <- function(input, output, session) {
       )
     })
 
-    # SVD bi-plot
-    # SVD_PCAloadings
-
-    # Do the scree plot by hand with SVD first
+    # Do the scree plot with SVD
     var_expl_text <- SVD_text_scaled$d^2 / sum(SVD_text_scaled$d^2)
     var_expl_text_df <- as.data.frame(var_expl_text) %>%
       dplyr::mutate(singular_values = row_number())
@@ -345,7 +336,7 @@ TAB3_SERVER <- function(input, output, session) {
         ))) +
         ggplot2::labs(
           title = "Scree plot from base::svd() results",
-          subtitle = "Each squared singular value divided by the sum total of all squared values",
+          subtitle = "Each squared singular value in the D matrix divided by the sum total of all its squared values",
           x = "Number of singular values",
           y = "% of variance explained"
         ) +
@@ -367,7 +358,7 @@ TAB3_SERVER <- function(input, output, session) {
     output$PCAscores_tbl <- DT::renderDataTable({
       data_table_fun(
         df = PCAscores,
-        table_title = "PCA Scores: x from stats::prcomp()",
+        table_title = "PCA x values from stats::prcomp()",
         colours = "Greens",
         font_perc = "100%",
         dp = 2
@@ -380,7 +371,7 @@ TAB3_SERVER <- function(input, output, session) {
     output$PCAloadings_tbl <- DT::renderDataTable({
       data_table_fun(
         df = PCAloadings,
-        table_title = "PCA Loadings: rotation from stats::prcomp()",
+        table_title = "PCA rotation values from stats::prcomp()",
         colours = "Greens",
         font_perc = "100%",
         dp = 2
@@ -784,7 +775,7 @@ TAB3_SERVER <- function(input, output, session) {
       ),
 
 
-      tags$h3("7 Create the identical PCA output to SVD using the R PCA function stats::prcomp()"),
+      tags$h3("7 Traditional PCA output using the R PCA function stats::prcomp()"),
 
       shiny::wellPanel(
         shiny::fluidRow(
@@ -807,13 +798,14 @@ TAB3_SERVER <- function(input, output, session) {
             status = "info",
             solidHeader = FALSE,
             collapsible = TRUE,
-            p("To demonstrate that we have entirely re-created a Principal Components Analysis
-            with SVD, here we simply use the R function stats::prcomp() on the TDM.
-            From the list of objects prcomp creates we can view here both the PCA scores and 
-            PCA loadings in tables. And use the excellent factoextra::fviz_pca_biplot function to create
-            the combined plot of both the PCA scores and loadings, factoextra::fviz_eig() to create
-            the scree plot, and squaring sdev to create the eigenvalues (or use the function 
-            factoextra::get_eigenvalue()).
+            p("To demonstrate that we have carried out a Principal Components Analysis
+            using SVD, here we use the R function stats::prcomp() on the TDM to create the same output.
+            From the list of objects prcomp creates here is a table of the PCA scores that are
+            equilvant to U x D in the SVD. And also a table of the PCA rotation values that are equivalent to the V matrix 
+            in SVD.
+            Also, by putting the R object created by stats::prcomp into factoextra::fviz_pca_biplot this create the biplot,
+            and factoextra::fviz_eig() creates the scree plot. While squaring sdev in the output of prcomp creates the eigenvalues table.
+            We could also use the function factoextra::get_eigenvalue() to create the eigenvalues.
             ")
           ))
         ),
