@@ -19,7 +19,7 @@ TAB3_SERVER <- function(input, output, session) {
   )
   # https://cran.r-project.org/web/packages/tm/vignettes/tm.pdf
  txt3 <- system.file("texts", "crude", package = "tm")
- txt3 <- tm:::VCorpus(DirSource(txt3, mode = "binary"),readerControl = list(reader = readReut21578XMLasPlain))
+ txt3 <- tm:::VCorpus(tm::DirSource(txt3, mode = "binary"),readerControl = list(reader = readReut21578XMLasPlain))
  txt3 <- tidytext::tidy(txt3) %>% dplyr::select(id,heading)
 
   ## ---- server logic ----

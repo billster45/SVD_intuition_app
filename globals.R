@@ -17,8 +17,8 @@ library(dashboardthemes)
 library(ggforce)
 library(imager)
 library(magick)
-library(FactoMineR)
 library(factoextra)
+library(tm)
 
 options(DT.options = list(
   pageLength = 12,
