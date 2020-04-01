@@ -19,6 +19,7 @@ library(imager)
 library(magick)
 library(factoextra)
 library(tm)
+library(tidytext)
 
 options(DT.options = list(
   pageLength = 12,

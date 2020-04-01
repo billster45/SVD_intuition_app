@@ -36,7 +36,7 @@ TAB3_SERVER <- function(input, output, session) {
       txt <- txt2
       txt_df <- txt %>% as.data.frame()
     } else if (input$select_text == 3) {
-      txt <- quanteda::corpus(txt,docid_field = "id", text_field = "heading")
+      txt <- quanteda::corpus(txt3,docid_field = "id", text_field = "heading")
       txt_df <- txt3
     }
 
