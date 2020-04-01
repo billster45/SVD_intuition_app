@@ -232,6 +232,15 @@ TAB1_SERVER <- function(input, output, session) {
             )),
 
             tags$li(p(
+              "The 'Reuters News Headlines' text is from the built in example within the ",
+              shiny::a("tm text mining R package",
+                       href = "https://cran.r-project.org/web/packages/tm/vignettes/tm.pdf",
+                       target = "_blank"
+              ), ". See page 2."
+            )),
+            
+            
+                        tags$li(p(
               "The shinydashboardplus structure of this app began by using this well set out template by ",
               shiny::a("Dan Rogers",
                 href = "https://github.com/bodhi-root/shiny-dashboard-template",

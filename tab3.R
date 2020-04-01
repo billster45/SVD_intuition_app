@@ -17,6 +17,10 @@ TAB3_SERVER <- function(input, output, session) {
     d2 = "Delivery of silver arrived in a silver truck",
     d3 = "Shipment of gold arrived in a truck"
   )
+  # https://cran.r-project.org/web/packages/tm/vignettes/tm.pdf
+ txt3 <- system.file("texts", "crude", package = "tm")
+ txt3 <- tm:::VCorpus(DirSource(txt3, mode = "binary"),readerControl = list(reader = readReut21578XMLasPlain))
+ txt3 <- tidytext::tidy(txt3) %>% dplyr::select(id,heading)
 
   ## ---- server logic ----
 
@@ -27,26 +31,32 @@ TAB3_SERVER <- function(input, output, session) {
   ), {
     if (input$select_text == 1) {
       txt <- txt1
+      txt_df <- txt %>% as.data.frame()
     } else if (input$select_text == 2) {
       txt <- txt2
+      txt_df <- txt %>% as.data.frame()
+    } else if (input$select_text == 3) {
+      txt <- quanteda::corpus(txt,docid_field = "id", text_field = "heading")
+      txt_df <- txt3
     }
 
-
-    # print the raw text
-    txt_df <- txt %>% as.data.frame()
-
+    # print the raw documents
     output$txt_tbl <- DT::renderDataTable({
       txt_df %>%
         DT::datatable(
-          caption = "The text to be...",
+          caption = "The raw text in each document.",
           extensions = c("Buttons"),
           options = list(autoWidth = TRUE)
         )
     })
 
-    
     # Tokensie the text
-    toks <- quanteda::tokens(txt)
+    toks <- quanteda::tokens(txt,
+                             remove_punct = TRUE,
+                             remove_symbols = TRUE,
+                             remove_separators = TRUE,
+                             remove_numbers = TRUE,
+                             )
     
     # Depending on docs chosen, tokenise the text to single words and remove stop words
     if (input$select_text == 1) {
@@ -54,6 +64,8 @@ TAB3_SERVER <- function(input, output, session) {
                                              selection = "keep", padding = FALSE)
         mydfm <- quanteda::dfm(toks_nostop)
     } else if (input$select_text == 2) {
+      mydfm <- quanteda::dfm(toks, remove = stopwords())
+    } else if (input$select_text == 3) {
       mydfm <- quanteda::dfm(toks, remove = stopwords())
     }
 
@@ -498,7 +510,8 @@ TAB3_SERVER <- function(input, output, session) {
               label = "Select text",
               choices = list(
                 "Memos" = 1,
-                "Gold Silver Truck" = 2
+                "Gold Silver Truck" = 2,
+                "Reuters News Headlines" = 3
               ),
               selected = 1
             )
